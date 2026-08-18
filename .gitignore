@@ -1,0 +1,47 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build / generated output
+build/
+dist/
+out/
+
+# Node
+node_modules/
+
+# Android / Gradle generated files
+.gradle/
+local.properties
+**/build/
+**/.cxx/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Coverage
+coverage/
+
+# Archives
+*.zip
+*.tar
+*.gz
