@@ -9,23 +9,23 @@ Implementation: LOCKED
 
 1. Purpose 
 
-AG-12 defines the production architecture required by NIDDE before implementation and production deployment.
+AG-12 defines the production architecture required by NIDDE before implementation and production operation.
 
 This document is an architecture contract.
 
-It defines the production environment boundary, runtime architecture, infrastructure responsibilities, database runtime requirements, networking, secret management, observability, backups, recovery, scaling, availability, operational security, deployment environment requirements, and production failure behavior.
+It defines the production environment boundary, runtime responsibilities, infrastructure requirements, networking, data services, secret handling, observability, backups, recovery, scaling, operational security, deployment compatibility, and production safeguards.
 
-It does not implement infrastructure, deployment configuration, CI/CD workflows, application source code, database migrations, Android code, external provider SDKs, or release procedures.
+It does not implement infrastructure, deployment workflows, application source code, database migrations, or release procedures.
 
 2. Scope 
 
 AG-12 owns:
 
-production environment architecture runtime environment boundaries application runtime requirements production networking database runtime architecture persistent storage requirements secure secret/runtime configuration production observability monitoring and alerting requirements backup and recovery architecture availability and resilience requirements scaling requirements production access control requirements runtime security boundaries production failure handling infrastructure dependency requirements production configuration requirements operational readiness requirements production handoff requirements 
+production environment architecture runtime infrastructure boundaries production networking production service topology production data-service requirements production configuration secret-management requirements at the production boundary production access control observability monitoring and alerting requirements backup and recovery requirements availability and resilience requirements scaling requirements production logging requirements operational security requirements production deployment boundaries production failure handling disaster-recovery requirements 
 
 The following remain owned by their respective gates:
 
-AG-02 — Repository Structure AG-03 — System / Dependency Architecture AG-04 — Data Model AG-05 — API Contract AG-06 — Authentication / Authorization AG-07 — Security Model AG-08 — External Integrations AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-13 — Release Architecture 
+AG-03 — System / Dependency Architecture AG-04 — Data Model AG-05 — API Contract AG-06 — Authentication / Authorization AG-07 — Security Model AG-08 — External Integrations AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-13 — Release Architecture 
 
 AG-12 must not redefine the scope of another gate.
 
@@ -33,613 +33,457 @@ AG-12 must not redefine the scope of another gate.
 
 NIDDE production architecture follows:
 
-least privilege defense in depth secure-by-default configuration environment separation backend authority controlled administrative access secure secret handling observable critical operations recoverability controlled failure horizontal scalability where appropriate minimized single points of failure controlled external dependencies auditable production operations reproducible deployment explicit production readiness 
+least privilege defense in depth controlled access secure defaults service isolation fault containment data durability observable operations controlled configuration protected secrets reproducible deployment auditable administrative activity explicit recovery procedures separation of production from non-production environments 
 
-Production infrastructure must support the application architecture without redefining it.
+Production architecture must preserve all approved architecture contracts.
 
-4. Production Authority Boundary 
+4. Production Trust Boundary 
 
-Production infrastructure is responsible for operating the approved NIDDE system.
+The principal production trust boundaries are:
 
-Production infrastructure must not become the authority for:
+Android client → public API boundary public API → backend/domain services backend → database/data services backend → external integrations backend → secure file/document storage CI/CD → production deployment boundary administrative interface → administrative APIs monitoring/observability → production systems backup/recovery systems → protected production data 
 
-user roles domain ownership service lifecycle payment success KYC approval service completion administrative business decisions 
+Every boundary must enforce the applicable authentication, authorization, validation, encryption, and least-privilege requirements defined by AG-06 and AG-07.
 
-Those decisions remain governed by the application/domain architecture established by AG-04 through AG-08.
+5. Runtime Architecture 
 
-Infrastructure may enforce technical access controls and operational protections but must not silently redefine business rules.
+Production must provide controlled runtime capacity for the approved NIDDE backend architecture.
 
-5. Environment Separation 
+Runtime components must be separated according to their approved responsibilities.
 
-NIDDE must maintain clear separation between environments.
+The production environment must not introduce unauthorized domain ownership.
 
-At minimum, where applicable:
+The backend remains authoritative for:
 
-development CI/test staging/pre-production production 
+identity authorization ownership service lifecycle payment state cash transaction state KYC state financial state administrative state 
 
-Production must have:
+The production infrastructure must host and protect these services but must not become an independent source of business authority.
 
-separate credentials separate sensitive configuration separate protected data separate privileged access controlled deployment access 
+6. API Production Boundary 
 
-Production data must not be casually copied into lower environments.
+AG-05 owns the API contract.
 
-Production credentials must never be used for ordinary development or CI testing.
-
-6. Runtime Architecture 
-
-The production environment must provide a controlled runtime for the NIDDE backend services defined by AG-03.
-
-The runtime architecture must support:
-
-API serving authenticated requests authorization enforcement domain processing database access external integration access background processing where required notification processing where required webhook processing audit/security event generation health monitoring 
-
-Runtime components must communicate only through approved interfaces.
-
-No production component may bypass the ownership boundaries established by AG-03 and AG-04.
-
-7. API Runtime Boundary 
-
-The production API runtime must expose only approved API contracts defined by AG-05.
+AG-12 provides the production runtime boundary through which the approved API is exposed.
 
 Production API infrastructure must support:
 
-secure transport authentication enforcement authorization enforcement request validation bounded requests pagination filtering/sorting restrictions idempotency controlled error responses correlation identifiers rate/abuse controls API versioning 
+secure transport controlled ingress authentication and authorization enforcement request validation bounded request handling rate/abuse controls controlled error responses correlation/reference identifiers observability health monitoring 
 
-Infrastructure-level controls must complement, not replace, application-level authorization.
+Production infrastructure must not alter API semantics.
 
-8. Authentication and Authorization Runtime 
+Breaking API changes remain subject to AG-05.
 
-AG-06 owns authentication and authorization architecture.
+7. Authentication and Authorization 
 
-AG-12 provides the production environment required to operate those mechanisms securely.
+AG-06 owns authentication and authorization.
+
+AG-12 must provide the production environment required to protect those mechanisms.
 
 Production must support:
 
-secure credential/session handling protected authentication endpoints controlled session/token validation protected recovery operations administrative access restrictions secure identity-related configuration 
+secure authentication endpoints protected session/token handling secure credential configuration restricted administrative access revocation/rotation mechanisms where required least-privilege service access 
 
-Production infrastructure must never bypass AG-06 authorization decisions.
+Production infrastructure must never infer or modify application roles or permissions.
 
-Compromise of an infrastructure component must be treated as a security incident according to AG-07 requirements.
+Administrative access to infrastructure is separate from NIDDE application authorization and must be independently controlled.
 
-9. Security Runtime Boundary 
+8. Security Boundary 
 
 AG-07 owns the security model.
 
-AG-12 must provide production controls capable of enforcing and supporting:
+AG-12 implements the production environment requirements necessary to enforce that model.
 
-least privilege secure networking secret protection protected logs access controls monitoring abuse controls secure configuration incident response support sensitive-data protection 
+Production must protect:
 
-Production configuration must not weaken AG-07 requirements.
+credentials authentication material API secrets payment credentials webhook secrets KYC provider credentials database credentials cloud/service credentials private keys sensitive logs backups 
 
-Security-sensitive infrastructure changes must be auditable.
+Production secrets must never be committed to Git.
 
-10. Networking 
+Secrets must be supplied through an approved secure mechanism.
 
-Production networking must use controlled boundaries.
+9. Network Architecture 
 
-Where applicable, the architecture should separate:
+Production networking must enforce controlled communication.
 
-public ingress application/runtime services database/private services internal workers administrative interfaces external integration traffic 
+At minimum, the architecture should distinguish:
 
-The database must not be unnecessarily exposed directly to the public internet.
+public ingress application/backend runtime protected data services secure storage administrative access monitoring/observability services 
 
-Administrative interfaces must use restricted access mechanisms.
+Database and other protected data services must not be exposed directly to the public internet unless explicitly required and secured by the approved architecture.
 
-External provider traffic must pass through approved integration boundaries.
+Administrative interfaces must use controlled access.
 
-11. Transport Security 
+10. Transport Security 
 
-Production communication must use secure transport.
+Production communication must use secure transport where applicable.
 
-At minimum:
+The production environment must protect:
 
-public API traffic must use HTTPS/TLS administrative access must use secure channels service-to-service communication must use appropriate protection database connections must use secure mechanisms where supported external provider communication must follow AG-08 requirements 
+client-to-API communication service-to-service communication where required database connections external provider communication storage access administrative access monitoring access 
 
-Invalid or insecure transport configurations must not be accepted in production.
+Insecure transport must not be used for sensitive production data.
 
-12. Database Runtime 
+Certificate and key management must follow approved security and operational controls.
 
-The production database is a protected backend resource.
+11. Database Production Boundary 
 
-AG-04 defines the authoritative data model.
+AG-04 owns the data model.
 
-AG-12 defines production operation requirements for that data model.
+AG-12 owns the production environment in which the approved data services operate.
 
 Production database architecture must provide:
 
-controlled network access least-privilege credentials backup capability recovery capability monitoring connection management migration compatibility storage protection appropriate availability controls 
+restricted network access least-privilege credentials encrypted communication controlled schema changes backup protection recovery capability monitoring capacity management controlled administrative access 
 
-Application components must access the database through approved data-access boundaries.
+The production database must remain authoritative only according to the approved domain/data architecture.
 
-Direct public database access is prohibited unless explicitly justified and protected by architecture.
+No production component may bypass approved repository/data-access boundaries to perform unauthorized domain mutations.
 
-13. Database Migration Safety 
+12. Data Durability 
 
-Database migrations must follow AG-04 and AG-11 requirements.
+Production must protect authoritative data against accidental loss and infrastructure failure.
 
-Production migration execution must:
+The architecture must support:
 
-use approved migration artifacts preserve migration history prevent duplicate execution support controlled failure consider application/schema compatibility provide recovery planning 
+durable storage regular backups where required backup integrity checks protected backup access retention policy restoration procedures recovery testing 
 
-Irreversible migrations require explicit compatibility and recovery planning.
+Critical financial, KYC, lifecycle, audit, and user data require appropriate durability controls.
 
-A successful migration command does not by itself prove application compatibility.
+13. Backup Architecture 
 
-14. Persistent Storage 
+Backups must be:
 
-Production persistent storage may include:
+protected from unauthorized access separated from the primary runtime where appropriate encrypted where required access-controlled monitored retained according to approved policy periodically tested for restoration 
 
-database storage approved object/file storage logs audit records controlled operational data 
+A backup that has never been successfully restored must not be assumed to be reliable.
 
-Sensitive files such as KYC documents must use the approved secure storage boundary defined by AG-08 and protected according to AG-07.
+Backup credentials must not be stored in source control.
 
-Git is never a production storage location for:
+14. Recovery Architecture 
 
-KYC documents identity documents private keys production credentials payment secrets provider secrets 15. Secret Management 
+Production must support controlled recovery from:
 
-Production secrets must be supplied through approved secret-management mechanisms.
+application failure infrastructure failure database failure storage failure dependency outage credential compromise configuration failure accidental deletion deployment failure 
 
-Examples include:
+Recovery procedures must preserve authoritative business state.
 
-database credentials authentication secrets provider credentials payment credentials webhook secrets storage credentials Android signing/deployment secrets where applicable infrastructure credentials 
+Recovery must not silently fabricate:
 
-Secrets must:
+payment success KYC approval service completion cash settlement lifecycle transitions 15. Availability and Resilience 
 
-never be committed to Git not appear in logs not be embedded in application source be minimally scoped be protected at rest be rotated according to security requirements be accessible only to authorized production components 
+Production architecture should minimize single points of failure where justified by the approved availability requirements.
 
-.env.example remains limited to variable names and safe placeholders.
+Critical services must have defined behavior for:
 
-16. Configuration Management 
+dependency failure temporary network failure service restart database unavailability external provider outage queue or asynchronous processing failure where applicable 
 
-Production configuration must be separated from source code where appropriate.
+Failure of an external provider must not automatically become a false successful business state.
 
-Configuration must distinguish:
-
-non-sensitive application configuration environment-specific configuration sensitive secrets 
-
-Production configuration changes must be controlled and auditable.
-
-A configuration change must not silently change:
-
-API contracts authorization rules lifecycle semantics payment authority KYC authority domain ownership 17. External Integrations 
+16. External Integrations 
 
 AG-08 owns external integration architecture.
 
-AG-12 provides the production environment necessary to operate those integrations.
+AG-12 provides the production environment required to operate those integrations securely.
 
 Production must support:
 
-secure provider credentials outbound connectivity bounded timeouts retry controls webhook endpoints webhook security provider failure handling reconciliation provider observability 
+secure provider credentials controlled outbound communication webhook ingress protection timeout handling retry behavior provider failure handling observability reconciliation support secret rotation 
 
-External provider state must not automatically replace NIDDE domain authority.
+Provider-specific implementation must remain behind the AG-08 integration boundary.
 
-Critical provider discrepancies must be detectable and reviewable.
+17. Payment Production Security 
 
-18. Payment Production Safety 
+Payment and Cash Transaction remain separate domain concepts.
 
-Payment production infrastructure must preserve the payment authority chain defined by AG-05, AG-07, and AG-08.
+Production must protect electronic payment operations against:
 
-The production system must support:
+unauthorized access forged callbacks replay duplicate processing secret leakage inconsistent state accidental data loss 
 
-Provider → validated integration boundary → NIDDE backend → authoritative Payment state
+Payment provider callbacks must pass through the approved AG-08 validation boundary.
 
-The client must never become the production authority for electronic payment success.
+Production infrastructure must never treat a client request as proof of electronic payment success.
 
-Production payment operations require:
+18. KYC Production Security 
 
-protected credentials secure webhook handling idempotency replay protection auditability reconciliation controlled failure handling 
+KYC information and documents are sensitive.
 
-Production systems must never use real payment credentials for ordinary CI testing.
+Production must provide secure boundaries for:
 
-19. Cash Transaction Safety 
+KYC document storage restricted access provider communication encryption auditability retention controls backup protection 
 
-Cash Transaction remains separate from electronic Payment.
+KYC documents must not be stored in Git.
 
-Production infrastructure must preserve the separate domain concepts.
+KYC approval remains a server-side authorized domain decision.
 
-Cash records must remain:
+Production infrastructure must not independently approve or reject KYC.
 
-server-authoritative protected auditable recoverable where required 
+19. Location and Tracking 
 
-Infrastructure must not automatically infer cash settlement from unrelated operational signals.
+Location and tracking information must remain protected according to AG-04, AG-07, and AG-08.
 
-20. KYC Production Safety 
+Production must support:
 
-KYC production processing must preserve AG-06, AG-07, and AG-08 boundaries.
+secure transport restricted access appropriate retention controlled storage monitoring without unnecessary sensitive exposure 
 
-Production must provide:
+Tracking data must not become independent proof of:
 
-protected KYC storage restricted access secure transport controlled credentials auditability appropriate retention controls provider integration security 
+payment completion service completion cash settlement 20. Messaging and Notifications 
 
-KYC documents must not appear in:
+Production must support authorized messaging and notification operations.
 
-application logs ordinary CI artifacts public storage unrestricted API responses source control 
+Messaging infrastructure must protect:
 
-KYC approval remains an authorized server-side decision.
+participant access message confidentiality message integrity appropriate retention abuse controls operational availability 
 
-21. Location and Tracking Production Safety 
+Notification infrastructure must not become authoritative for business state.
 
-Location and tracking information is sensitive.
+A failed or delayed notification must not automatically change:
 
-Production architecture must support:
-
-authorized access secure transport controlled retention restricted exposure appropriate precision controls monitoring of abnormal access where required 
-
-Tracking information must not become authoritative proof of:
-
-payment completion service completion cash settlement 
-
-Production storage of location data must follow the approved data model and security requirements.
-
-22. Messaging Production 
-
-Messaging infrastructure must support:
-
-authorized access conversation isolation reliable message processing controlled storage abuse protection monitoring safe failure handling 
-
-The infrastructure must not expose conversations across unauthorized participants.
-
-Message delivery is not authoritative for the underlying business transaction.
-
-23. Notifications Production 
-
-Notification infrastructure must support approved channels such as:
-
-push notifications email SMS 
-
-where enabled by the product and integration architecture.
-
-Notification failure must not automatically mutate authoritative business state.
-
-Production notification processing should support:
-
-controlled retries deduplication where required delivery status failure classification provider timeout handling operational monitoring 24. Background Processing 
-
-Where background jobs are required, production architecture must provide controlled processing.
-
-Background workers may support:
-
-notification delivery webhook processing reconciliation scheduled maintenance asynchronous domain operations other approved tasks 
-
-Background jobs must be:
-
-idempotent where necessary retry-safe observable bounded failure-aware 
-
-Background workers must not bypass authorization or domain ownership.
-
-25. Webhook Runtime 
-
-Webhook endpoints are production trust boundaries.
-
-Production must provide:
-
-secure endpoint exposure authenticity verification signature validation where supported replay protection idempotency payload validation controlled retry behavior auditability monitoring 
-
-A webhook must never be trusted merely because it reached the production endpoint.
-
-Webhook architecture remains governed by AG-08 and protected by AG-07.
-
-26. Rate and Abuse Controls 
-
-Production must support the rate and abuse controls required by AG-07 and exposed through AG-05.
-
-Controls may include:
-
-request rate limiting authentication attempt controls recovery protection request creation limits offer creation limits messaging controls payment controls KYC controls administrative controls webhook protection resource discovery controls 
-
-Exact thresholds may be adjusted operationally without weakening the security boundary.
-
-27. Administrative Access 
+service state payment state KYC state financial state 21. Administrative Access 
 
 Production administrative access must follow least privilege.
 
 Administrative access must be:
 
-explicitly authorized authenticated restricted auditable monitored revocable 
+authenticated authorized restricted attributable auditable monitored 
 
-Production infrastructure must not provide unrestricted administrative access to ordinary users.
+Infrastructure administrators and NIDDE application administrators are distinct security contexts.
 
-Infrastructure operators must not automatically receive NIDDE application Admin authority unless explicitly defined and controlled by the architecture.
+No production administrator may bypass application authorization without an explicitly controlled operational mechanism.
 
-28. Monitoring 
-
-Production monitoring must cover critical components and operations.
-
-Monitoring should include:
-
-API availability runtime health database health resource utilization error rates latency background job health webhook processing payment integration health notification integration health storage health authentication failures security events reconciliation discrepancies 
-
-Monitoring data must not expose sensitive secrets or unnecessary personal data.
-
-29. Health Checks 
-
-Production services must provide appropriate health indicators.
-
-Health checks should distinguish between:
-
-process availability dependency availability application readiness database readiness integration readiness where appropriate 
-
-A health endpoint must not expose:
-
-credentials tokens internal secrets sensitive configuration unrestricted infrastructure details 
-
-Health checks must not be used as proof of business-state success.
-
-30. Logging 
+22. Production Logging 
 
 Production logs must support troubleshooting and security investigation.
 
-Logs should include safe operational information such as:
+Logs may contain:
 
-timestamp service/component environment operation category correlation/reference identifier error category latency safe provider reference where appropriate 
+service/event category timestamp request/correlation identifier non-sensitive operation information error category runtime information 
 
-Logs must never contain:
+Logs must not contain:
 
-passwords access tokens private keys payment secrets webhook secrets database credentials complete KYC documents unnecessary sensitive personal data 
+passwords authentication tokens private keys payment secrets webhook secrets database credentials complete KYC documents unnecessary sensitive personal information 
 
-Logging requirements remain coordinated with AG-07.
+Log access must itself be controlled.
 
-31. Audit Records 
+23. Audit and Security Events 
 
-Critical production actions must remain traceable.
+Production must preserve important security and operational evidence.
 
-Examples include:
+Where applicable, evidence should include:
 
-authentication security events authorization-sensitive actions administrative actions KYC decisions lifecycle transitions financial events payment integration events security configuration changes deployment operations recovery operations 
+authentication security events authorization/security events administrative actions permission changes financial events KYC decisions lifecycle transitions integration events deployment events security configuration changes 
 
-Audit records must be protected against unauthorized modification.
+Audit evidence must be protected from unauthorized modification.
 
-Audit requirements remain coordinated with AG-04, AG-07, and AG-11.
+AG-04 and AG-07 remain authoritative for domain and security audit requirements.
 
-32. Backup Architecture 
+24. Monitoring 
 
-Production must maintain backups for critical persistent data.
+Production monitoring must cover critical infrastructure and application behavior.
 
-Backup architecture must define:
+Monitoring should include, where appropriate:
 
-backup scope backup frequency retention encryption/protection access control integrity validation recovery procedures 
+service availability API health latency error rates database health storage health resource utilization dependency failures payment integration failures webhook failures authentication anomalies backup status deployment status 
 
-Backups must be protected with security controls equivalent to the sensitivity of the source data.
+Monitoring must not expose sensitive information unnecessarily.
 
-KYC and financial data require particular protection.
+25. Alerting 
 
-33. Recovery Architecture 
+Critical production failures should generate controlled alerts.
 
-Production must support controlled recovery from:
+Alerts may cover:
 
-application failure database failure storage failure infrastructure failure provider outage accidental configuration changes security incidents corrupted or unavailable data where recoverable 
+service outage elevated error rate database failure storage failure payment integration failure webhook processing failure backup failure security anomaly resource exhaustion certificate/credential problems deployment failure 
 
-Recovery procedures must preserve authoritative business state wherever technically possible.
+Alert severity and operational routing may be refined during implementation without changing this architecture boundary.
 
-Recovery must not create duplicate:
+26. Capacity and Scaling 
 
-payments refunds lifecycle transitions webhook effects financial settlements 
+Production architecture must support controlled scaling according to actual system requirements.
 
-Idempotency and reconciliation requirements remain applicable during recovery.
+Scaling considerations include:
 
-34. Disaster Recovery 
-
-The production architecture must define disaster-recovery expectations appropriate to the system's criticality.
-
-Recovery planning should consider:
-
-service restoration database restoration backup restoration credential rotation provider reconnection DNS/network recovery where applicable verification after recovery audit evidence 
-
-Exact recovery objectives may be finalized during production implementation without contradicting this architecture boundary.
-
-35. Availability and Resilience 
-
-Critical production components should avoid unnecessary single points of failure.
-
-Where appropriate, the architecture should support:
-
-redundant application instances controlled database availability resilient storage retry-safe background processing provider failure isolation graceful degradation 
-
-High availability must not compromise data consistency or financial correctness.
-
-36. Scaling 
-
-Production architecture must allow controlled scaling as demand increases.
-
-Scaling may apply to:
-
-API instances workers database capacity storage notification processing webhook processing 
+API traffic concurrent users database workload messaging workload notification workload location/tracking workload payment operations storage growth logging/observability volume 
 
 Scaling must preserve:
 
-authorization idempotency ordering requirements where applicable transaction integrity auditability rate controls 
+authorization data consistency idempotency auditability security lifecycle correctness 
 
-Scaling must not create duplicate authoritative side effects.
+Scaling must not create multiple conflicting authorities for the same domain state.
 
-37. Concurrency and Consistency 
+27. Configuration Management 
 
-Production runtime must account for concurrent operations.
+Production configuration must be separated from source code where appropriate.
 
-Examples include:
+Configuration must distinguish:
 
-multiple offers simultaneous lifecycle actions payment retries duplicate webhooks repeated notification jobs concurrent administrative actions 
+safe application configuration environment-specific values sensitive secrets 
 
-The production system must rely on appropriate application/database controls to preserve authoritative state.
+Production configuration changes must be controlled and auditable.
 
-Infrastructure must not assume that a single client is the only actor.
+Configuration must not silently alter approved architecture contracts.
 
-38. Time and Scheduling 
+28. Dependency and Runtime Management 
 
-Production services must use controlled time configuration.
+Production runtime dependencies must remain compatible with AG-03 and AG-11.
 
-Where business events depend on time, the system must use a consistent authoritative time strategy.
+Production must support controlled:
 
-Scheduled jobs must be:
+dependency versions runtime versions operating environment security updates vulnerability monitoring configuration changes 
 
-observable retry-safe idempotent where necessary protected from duplicate execution 
+Unapproved dependency changes must not be introduced solely during deployment.
 
-Time configuration must not silently alter domain lifecycle semantics.
+29. CI/CD Boundary 
 
-39. Deployment Runtime 
+AG-11 owns CI/CD architecture.
 
-AG-11 owns CI/CD.
+AG-12 defines what production requires from CI/CD.
 
-AG-12 defines the production environment that receives approved deployment artifacts.
+Production deployment must:
 
-Production deployment must require:
+use approved artifacts preserve artifact traceability use protected credentials target the correct environment support controlled deployment provide deployment observability fail safely 
 
-approved artifact verified source/provenance compatible configuration database compatibility required monitoring required backups/recovery readiness appropriate access controls 
+AG-12 must not redefine CI/CD workflow ownership.
 
-Production must not accept arbitrary artifacts merely because they can be executed.
+30. Deployment Boundary 
 
-40. Rollback and Recovery 
+Production deployment must be controlled.
 
-Production rollback must be coordinated with AG-11 and AG-13.
+Deployment mechanisms must support:
 
-Rollback must consider:
+approved artifact selection environment verification configuration validation health checks failure detection safe rollback/recovery where applicable deployment evidence 
 
-application compatibility database schema compatibility external provider state payment operations background jobs configuration active sessions irreversible operations 
+A technically successful deployment does not automatically constitute release approval.
 
-A rollback must not blindly reverse an irreversible financial or external side effect.
+Release authorization belongs to AG-13.
 
-Recovery may require reconciliation rather than simple version reversal.
+31. Release Boundary 
 
-41. Android Production Boundary 
+AG-13 owns release architecture.
 
-AG-09 defines Android architecture.
+AG-12 provides the production environment and operational capabilities required by the approved release process.
 
-Production infrastructure must provide the backend services consumed by Android through approved AG-05 contracts.
+AG-12 does not independently authorize a production release.
 
-The production environment must not:
+The following distinction must remain explicit:
 
-trust Android-local roles trust Android-local payment state trust Android-local KYC state expose administrative credentials to Android expose provider secrets unnecessarily 
+AG-11 → CI/CD execution
+AG-12 → Production environment
+AG-13 → Release authority
 
-The Android client remains an untrusted client.
+32. Health and Readiness 
 
-42. API and Android Compatibility 
+Production services must expose or provide appropriate health information.
 
-Production API deployment must remain compatible with AG-05 and AG-09.
+Health mechanisms should distinguish where applicable:
 
-Breaking changes require controlled API versioning or migration.
+process availability dependency availability readiness to receive traffic database availability critical integration availability 
 
-The production environment must not silently deploy an API contract incompatible with the approved Android client.
+Health checks must not expose secrets or sensitive internal information.
 
-Where backward compatibility is required, the compatibility period must be explicitly managed.
+33. Graceful Failure 
 
-43. Production Security Testing Support 
+Production services must fail safely.
 
-Production architecture must support the security testing requirements of AG-07 and AG-10.
+When a dependency fails:
 
-Production-like environments should allow testing of:
+the affected operation must return a controlled result authoritative state must remain consistent retries must respect idempotency sensitive information must not leak unrelated services should remain available where isolation permits 
 
-authentication authorization rate limiting webhook security payment integration boundaries KYC access controls sensitive-data protection logging behavior failure handling 
+A failure must not be converted into a false success.
 
-Production secrets and real sensitive data must not be required for ordinary automated testing.
+34. Data Consistency 
 
-44. Dependency and Supply-Chain Security 
+Production infrastructure must preserve the consistency requirements established by AG-04, AG-05, AG-06, AG-07, and AG-08.
 
-Production architecture must account for software and infrastructure dependencies.
+Particular care is required for:
 
-Where applicable:
+service lifecycle transitions offer acceptance payment state cash transactions KYC decisions messaging notifications financial reconciliation 
 
-approved versions should be tracked critical vulnerabilities should be monitored unsupported components should be identified dependency changes should pass CI/CD controls infrastructure images should be controlled production artifacts should have traceable provenance 
+Infrastructure scaling or recovery must not create duplicate authoritative effects.
 
-AG-11 owns CI/CD validation.
+35. Security Incident Support 
 
-AG-12 owns production runtime requirements.
+Production architecture must support security incident response.
 
-45. Infrastructure Access 
+The environment must allow, where required:
 
-Infrastructure access must follow least privilege.
+detection containment investigation credential rotation secret rotation affected-session invalidation evidence preservation recovery post-incident verification 
 
-Access should distinguish:
+Incident procedures may be expanded during implementation and operational readiness without changing this architecture contract.
 
-application runtime access database access deployment access monitoring access administrative access secret-management access recovery access 
+36. Disaster Recovery 
 
-Privileged access must be authenticated and auditable.
+Production must define recovery expectations for critical services.
 
-Credentials must not be shared casually.
+Recovery planning should consider:
 
-46. Production Incident Handling 
+database loss storage loss infrastructure-region/service failure where applicable credential compromise corrupted deployment external dependency outage accidental deletion 
 
-Production architecture must support AG-07 incident principles.
+Recovery priorities must preserve the most critical authoritative data and services first.
 
-The system must support:
+Exact recovery objectives are implementation/operational decisions and must remain consistent with approved requirements.
 
-detection containment investigation credential/secret rotation session invalidation where required recovery audit evidence post-incident correction 
+37. Production Testing Boundary 
 
-Production incidents affecting payments, KYC, authentication, authorization, or sensitive data require appropriate escalation.
+AG-10 owns testing architecture.
 
-Incident handling must not silently modify authoritative business state.
+AG-11 owns CI/CD execution.
 
-47. Production Configuration Changes 
+AG-12 requires production-safe validation before and after operational changes.
 
-Production configuration changes must be controlled.
+Production testing must avoid destructive actions against real user or financial data unless explicitly authorized and protected.
 
-Changes must be:
+Where production verification is necessary, it must use safe health checks and controlled validation.
 
-attributable reviewable auditable reversible where possible tested appropriately 
+Real production credentials must never be exposed through ordinary test processes.
 
-Configuration changes must not be used as an undocumented mechanism to bypass:
+38. Environment Separation 
 
-API contracts security controls authorization lifecycle rules release approval architecture verification 48. Production Readiness 
+Production must remain isolated from:
 
-Before production operation, the environment must demonstrate readiness for:
+local development automated test environments integration environments staging environments 
 
-application runtime database storage networking secrets authentication authorization external integrations payment processing KYC processing notifications monitoring backups recovery security controls deployment rollback/recovery 
+Production data must not be copied into lower environments without an explicitly approved protected process.
 
-Readiness evidence must be recorded according to the project control process.
+Lower environments must not receive unrestricted production credentials.
 
-49. Cross-Gate Consistency 
+39. Production Access Review 
+
+Production access should be periodically reviewed.
+
+Reviews should cover:
+
+infrastructure administrators database access deployment access secret access monitoring access storage access external provider credentials 
+
+Access must be removed or reduced when no longer required.
+
+40. Production Evidence 
+
+Important production operations should produce traceable evidence.
+
+Evidence may include:
+
+deployment identifier artifact identifier source revision environment timestamp health-check result migration result where applicable rollback/recovery result security event reference 
+
+Evidence must not contain secrets or unnecessary sensitive data.
+
+41. Cross-Gate Consistency 
 
 AG-12 must remain consistent with:
 
-AG-02:
+AG-03 system boundaries dependency ownership service responsibilities AG-04 data ownership lifecycle persistence payments KYC location notifications AG-05 API contract validation errors pagination idempotency versioning AG-06 authentication authorization roles ownership administrative authority AG-07 security secrets sensitive data logging abuse protection incident controls AG-08 external integrations payment providers KYC providers maps notifications storage webhook handling AG-09 Android client boundary API consumption authentication/session handling payment interaction location notifications AG-10 testing requirements production-safe verification AG-11 CI/CD artifact handling deployment automation security checks environment separation AG-13 release authority release approval release readiness 
 
-repository and operational configuration boundaries 
+AG-12 must not introduce a contradiction with any approved architecture gate.
 
-AG-03:
-
-system components service responsibilities dependency ownership 
-
-AG-04:
-
-entities ownership lifecycle payment/cash separation KYC location notifications 
-
-AG-05:
-
-API contracts error handling pagination idempotency versioning 
-
-AG-06:
-
-authentication authorization roles permissions ownership 
-
-AG-07:
-
-security secrets sensitive data logging abuse controls incident principles 
-
-AG-08:
-
-external providers payments maps notifications KYC storage webhooks 
-
-AG-09:
-
-Android/backend boundary client security API compatibility authentication/session handling 
-
-AG-10:
-
-production-like testing requirements test environment separation security and integration testing 
-
-AG-11:
-
-CI/CD artifact provenance deployment boundaries migration execution rollback coordination 
-
-AG-12 must not introduce a contradiction with any approved earlier gate.
-
-50. Verification Criteria 
+42. Verification Criteria 
 
 AG-12 may become VERIFIED only when:
 
-its scope matches the canonical AG-12 definition production responsibilities are clearly separated from application/domain authority runtime architecture aligns with AG-03 database runtime aligns with AG-04 API runtime aligns with AG-05 authentication/authorization runtime aligns with AG-06 security requirements align with AG-07 external integrations align with AG-08 Android backend requirements align with AG-09 testing environment requirements align with AG-10 deployment requirements align with AG-11 release requirements align with AG-13 production secrets are protected production and non-production environments are separated backup and recovery requirements are defined monitoring and audit requirements are defined payment and KYC production boundaries are preserved production failure and recovery behavior is defined no unresolved blocking contradiction exists required verification evidence is recorded 
+its scope matches the canonical AG-12 definition production boundaries are clearly defined runtime responsibilities are clear network boundaries are controlled database ownership remains aligned with AG-04 API exposure remains aligned with AG-05 authentication and authorization remain aligned with AG-06 production security remains aligned with AG-07 external integrations remain aligned with AG-08 Android compatibility remains aligned with AG-09 testing requirements remain aligned with AG-10 CI/CD responsibilities remain aligned with AG-11 secrets are protected backups and recovery are defined observability requirements are defined production access is controlled failure behavior is controlled environment separation is preserved release authority remains with AG-13 no unresolved blocking contradiction exists required verification evidence is recorded 
 
 READY FOR VERIFICATION does not mean VERIFIED.
 
-51. Implementation Lock 
+43. Implementation Lock 
 
 AG-12 does not authorize implementation.
 
@@ -649,19 +493,21 @@ LOCKED
 
 until the complete canonical architecture sequence and final readiness conditions are satisfied.
 
-Production infrastructure must not be provisioned solely because AG-12 has been written.
+No production infrastructure should be created solely because AG-12 has been written.
 
-52. Control Statement 
+44. Control Statement 
 
 AG-12 establishes the production architecture boundary for NIDDE.
 
-Production infrastructure operates the approved NIDDE system and provides the runtime, security, persistence, networking, observability, backup, recovery, resilience, and operational controls required for production.
+Production infrastructure exists to securely operate the approved NIDDE architecture.
 
-Production infrastructure does not become the authority for domain ownership, authentication decisions, authorization rules, lifecycle state, payment success, KYC approval, service completion, or other protected business decisions.
+It does not become the authority for:
 
-AG-12 must remain compatible with AG-02 through AG-11 and must hand off cleanly to AG-13.
+identity authorization ownership lifecycle payment state KYC approval financial settlement release authorization 
 
-No production configuration or infrastructure behavior may silently redefine an approved architecture contract.
+AG-12 must remain compatible with AG-03 through AG-11 and must provide the production boundary required by AG-13.
+
+No production infrastructure or operational mechanism may silently redefine an approved NIDDE architecture contract.
 
 AG-12 STATUS: READY FOR VERIFICATION
 
