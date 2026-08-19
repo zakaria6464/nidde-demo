@@ -13,15 +13,15 @@ AG-10 defines the testing architecture required by NIDDE before implementation.
 
 This document is an architecture contract.
 
-It defines the testing boundaries, test responsibilities, verification layers, contract testing requirements, security testing requirements, integration testing requirements, Android testing requirements, data and environment isolation, failure testing, and architecture verification requirements.
+It defines testing responsibilities, test boundaries, test levels, contract verification, security testing coordination, integration testing, Android testing, data validation, failure testing, idempotency testing, authorization testing, and verification evidence.
 
-It does not implement test code, application source code, database migrations, CI/CD workflows, deployment configuration, or production infrastructure.
+It does not implement application source code, production infrastructure, CI/CD workflows, deployment configuration, database migrations, or release procedures.
 
 2. Scope 
 
 AG-10 owns:
 
-testing architecture test-layer responsibilities unit testing requirements domain and business-rule testing API contract testing integration testing external-provider integration testing webhook testing security testing requirements authorization and ownership testing payment and financial-state testing KYC testing requirements lifecycle transition testing messaging authorization testing location/tracking testing notification behavior testing Android testing structure persistence/data-access testing failure and retry testing idempotency testing regression testing test data isolation test environment requirements architecture verification evidence 
+testing architecture test levels and responsibilities unit testing requirements domain/service testing API contract testing integration testing authorization and ownership testing requirements lifecycle transition testing payment and cash testing boundaries webhook and idempotency testing requirements KYC testing requirements messaging and notification testing location/tracking testing Android testing requirements offline and degraded-network testing security-test coordination test data requirements failure and recovery testing regression requirements test evidence requirements test-environment requirements 
 
 The following remain owned by their respective gates:
 
@@ -33,506 +33,457 @@ AG-10 must not redefine the scope of another gate.
 
 NIDDE testing follows these principles:
 
-test server authority verify authorization server-side verify domain ownership rules verify lifecycle transitions verify API contracts verify security boundaries isolate external dependencies prevent duplicate authoritative effects protect sensitive test data reproduce failure conditions verify both successful and rejected operations maintain deterministic automated tests where practical avoid production credentials in ordinary testing preserve architecture boundaries during testing 
+server authority deterministic and repeatable tests isolated test responsibilities contract-first verification defense against unauthorized state mutation explicit lifecycle validation idempotency verification failure-path coverage security-aware test design minimal sensitive test data reproducible test environments regression protection evidence-based verification 
 
-Testing must verify the architecture rather than silently redefining it.
+A test must verify the approved architecture rather than silently redefine it.
 
-A test must not be considered valid merely because an implementation makes the test pass if that implementation violates an approved architecture contract.
+4. Source of Truth 
 
-4. Testing Authority Boundary 
+Testing must validate the architecture established by:
 
-Tests do not become authoritative business components.
+Canonical Master File Manifest NIDDE Project Control verified architecture gates AG-03 System / Dependency Architecture AG-04 Data Model AG-05 API Contract AG-06 Authentication / Authorization AG-07 Security Model AG-08 External Integrations AG-09 Android Architecture 
 
-The following remain authoritative according to earlier gates:
+AG-10 must not create an alternative source of truth.
 
-AG-04 — domain model and lifecycle ownership AG-05 — API contract AG-06 — authentication and authorization rules AG-07 — security requirements AG-08 — external integration boundaries AG-09 — Android client architecture 
+If a test expectation conflicts with an approved architecture contract, the affected test and implementation must be stopped until the architectural conflict is resolved.
 
-AG-10 verifies these contracts.
+A test must not be used to justify behavior that is not authorized by the architecture.
 
-It must not replace them.
+5. Test Authority Boundary 
 
-5. Test Layers 
+Tests validate system behavior.
 
-NIDDE testing should be organized into appropriate layers.
+Tests do not become an authoritative business layer.
 
-Where applicable:
+Test code must never establish production truth for:
 
-unit tests domain/business-rule tests repository/data-access tests API contract tests integration tests external-provider adapter tests webhook tests security tests Android UI/state tests end-to-end critical-flow tests 
+ownership roles permissions KYC approval payment success financial settlement service completion protected lifecycle state 
 
-Not every test requires the complete application stack.
+Test fixtures and mocks may represent these states only for controlled verification.
 
-Tests should use the smallest appropriate layer capable of proving the required behavior.
+They must not change the production domain authority model.
 
-6. Unit Testing 
+6. Test Levels 
 
-Unit tests must verify isolated components and deterministic business behavior.
+NIDDE testing must support appropriate levels including:
 
-Where applicable, unit tests must cover:
+6.1 Unit Tests 
 
-validation rules state-transition decisions authorization decisions ownership checks pagination behavior filtering/sorting allowlists idempotency decisions error mapping retry classification provider-result mapping notification-result handling client state mapping 
+Unit tests verify isolated components and deterministic business behavior.
 
-Unit tests must not assume that client-controlled values are authoritative.
+They should cover:
 
-7. Domain and Business-Rule Testing 
+validation logic state-transition rules mapping logic calculations error mapping authorization decision helpers where appropriate idempotency behavior domain rules 
 
-Domain tests must verify the authoritative business rules defined by AG-04 and exposed through AG-05.
+Unit tests must remain independent from production external providers unless explicitly required by the test boundary.
+
+6.2 Component Tests 
+
+Component tests verify behavior across closely related application components.
+
+Examples include:
+
+service/application coordination repository behavior API-client behavior authentication/session coordination local persistence behavior 6.3 API Contract Tests 
+
+API tests must verify that implementation conforms to AG-05.
+
+They must cover, where applicable:
+
+request structure response structure validation rules authentication requirements authorization requirements error structure pagination filtering sorting idempotency versioning correlation/reference identifiers 
+
+Tests must not introduce API fields or states that are absent from the approved contract without first resolving the architecture change.
+
+7. Data Model Testing 
+
+AG-04 owns the authoritative data model.
+
+AG-10 verifies implementation behavior against AG-04.
 
 Testing must cover, where applicable:
 
-entity ownership valid entity relationships request eligibility offer eligibility duplicate active-offer prevention service lifecycle transitions cancellation rules invalid transition rejection review eligibility payment-state rules cash-transaction separation KYC state rules notification non-authority administrative restrictions 
+entity relationships required fields identifiers ownership constraints uniqueness requirements lifecycle compatibility financial separation KYC separation notification relationships location/tracking relationships audit-related behavior 
 
-A test must verify both permitted and prohibited behavior.
+Tests must not create a second authoritative data model.
 
-8. Service Lifecycle Testing 
+Database-specific implementation details remain subject to the approved architecture and implementation gates.
 
-The authoritative lifecycle is:
+8. Authentication Testing 
 
-REQUESTED
-→ ACCEPTED
-→ EN_ROUTE
-→ ARRIVED
-→ IN_PROGRESS
-→ COMPLETED
+Authentication testing must validate the requirements established by AG-06.
 
-Cancellation and error states are explicitly supported.
+Testing should cover:
 
-Testing must verify:
+successful authentication failed authentication invalid credentials/factors session establishment session expiration session renewal where applicable session revocation where applicable recovery flows reuse of expired recovery credentials unauthorized access after privilege changes where applicable protection against authentication-material leakage 
 
-every valid transition every prohibited transition unauthorized transition attempts transition attempts from incorrect current states concurrent state changes repeated transition requests lifecycle history preservation invalid lifecycle manipulation from clients 
+Tests must not assume that possession of a syntactically valid token automatically grants authorization.
 
-The server must remain authoritative for lifecycle state.
-
-A client-side test must never treat a locally assigned lifecycle state as authoritative.
-
-9. Request and Offer Testing 
-
-Testing must verify Service Request and Offer behavior.
-
-For Service Requests, tests must cover:
-
-authorized creation unauthorized creation ownership enforcement valid service/category references invalid references lifecycle restrictions protected-field validation unauthorized access to private requests 
-
-For Offers, tests must cover:
-
-valid request reference eligible provider authorized provider action invalid provider invalid request state invalid amount/currency where applicable duplicate prohibited active offers accepted-offer uniqueness unauthorized offer modification 10. API Contract Testing 
-
-API tests must follow AG-05.
-
-Testing must verify:
-
-request schemas required fields data types allowed values validation errors authorization failures controlled error structure pagination stable ordering allowlisted filtering allowlisted sorting API versioning idempotency behavior correlation/reference identifiers where applicable 
-
-Tests must verify that clients cannot provide arbitrary database expressions or protected authoritative values.
-
-Breaking contract changes must be detected by tests rather than silently accepted.
-
-11. Authentication Testing 
-
-Authentication tests must follow AG-06 and security requirements from AG-07.
-
-Where applicable, testing must cover:
-
-valid authentication invalid credentials/factors expired authentication state revoked session/token invalid session/token account recovery recovery credential expiration recovery credential reuse authentication enumeration resistance authentication material protection session lifecycle behavior 
-
-Tests must verify that syntactically valid but unauthorized authentication material cannot grant unintended access.
-
-12. Authorization Testing 
+9. Authorization Testing 
 
 Authorization testing is mandatory for protected operations.
 
 Tests must verify:
 
-role boundaries permission boundaries resource ownership participant relationships lifecycle eligibility administrative authority KYC-dependent authorization where applicable profile/context authorization unauthorized resource access horizontal privilege escalation vertical privilege escalation 
+role restrictions permission restrictions resource ownership participant authorization administrative authorization lifecycle-based authorization profile/context authorization KYC-dependent authorization where required unauthorized identifier access cross-user access prevention cross-role access prevention 
 
-The test suite must include negative authorization cases.
+At minimum, tests must include negative cases.
 
-A successful authentication test alone is insufficient to prove authorization correctness.
+A successful authentication test is not sufficient evidence of authorization.
 
-13. Security Testing 
+10. Service Request and Offer Testing 
 
-Security testing must follow AG-07.
+Testing must verify the request/offer rules defined by AG-04 and AG-05.
 
-Where applicable, tests must cover:
+For Service Requests, tests should cover:
 
-authentication security authorization security ownership enforcement input validation injection protection sensitive-data exposure secret leakage unsafe error disclosure rate-limit behavior abuse controls replay protection webhook authenticity administrative authorization KYC access restrictions payment security boundaries logging safety 
+authorized creation validation failures unauthorized modification ownership enforcement lifecycle restrictions invalid state operations 
 
-Security tests must verify that protected information is not exposed through ordinary responses, logs, or error paths.
+For Offers, tests should cover:
 
-14. Input Validation Testing 
+valid request reference eligible provider provider authorization valid amount/currency where applicable lifecycle compatibility prohibited duplicate active offers accepted-offer uniqueness unauthorized offer access invalid offer transitions 
 
-All externally supplied input must be treated as untrusted.
+The backend remains authoritative for all protected state.
 
-Testing must cover:
+11. Lifecycle Testing 
 
-missing fields invalid types invalid identifiers invalid lengths numeric boundary violations invalid enum values malformed content unauthorized fields invalid ownership invalid lifecycle state invalid business conditions malicious input patterns 
+The authoritative lifecycle is:
 
-Validation failures must not produce partial authoritative mutations.
+REQUESTED → ACCEPTED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED
 
-15. Sensitive Data Testing 
+Cancellation and error states are explicitly supported.
 
-Testing must verify data minimization.
+Tests must verify:
 
-Tests must ensure that ordinary API responses and logs do not expose:
+every approved transition prohibited transitions actor authorization lifecycle prerequisites concurrent state changes stale-client operations rejection of arbitrary client-assigned states preservation of lifecycle history where required safe handling of repeated commands 
 
-passwords access tokens private keys provider secrets database credentials payment secrets complete KYC documents unnecessary personal information unnecessary precise location data internal infrastructure details 
+Tests must not redefine lifecycle semantics.
 
-Sensitive test fixtures must not contain real production secrets or unnecessary real personal information.
+12. Payment Testing 
 
-16. Payment Testing 
+Payment and Cash Transaction remain separate domain concepts.
 
-Payment testing must preserve the boundaries established by AG-05, AG-07, and AG-08.
+Testing must verify that:
 
-Tests must verify that:
+a client cannot declare electronic payment success payment authorization is enforced payment state is server-authoritative provider confirmation is required through the approved integration boundary duplicate payment requests are prevented idempotency is enforced repeated provider events do not create duplicate effects invalid payment states are rejected reconciliation discrepancies can be detected where applicable refunds/adjustments follow approved contracts where supported 
 
-the client cannot declare payment success provider confirmation is required for authoritative electronic payment success payment state transitions are validated unauthorized payment operations are rejected duplicate payment effects are prevented idempotency keys behave correctly repeated requests do not create duplicate authoritative effects duplicate webhooks do not create duplicate effects invalid webhooks are rejected replayed events are rejected where required refunds/adjustments are controlled where applicable reconciliation discrepancies can be detected 
-
-The following must fail as an authoritative payment result:
+No test may treat a client-provided:
 
 payment_status = successful
 
-when supplied solely by the client.
+as authoritative payment confirmation.
 
-17. Cash Transaction Testing 
+13. Cash Transaction Testing 
 
-Cash Transaction and electronic Payment must remain separate concepts.
+Cash settlement must be tested separately from electronic payment.
 
-Testing must verify:
+Tests should verify:
 
-cash records are not silently converted into electronic payment state electronic payment status does not automatically become cash settlement unauthorized cash actions are rejected cash actions follow approved authorization and lifecycle rules cash records remain auditable 18. KYC Testing 
+correct cash transaction ownership authorized cash actions lifecycle compatibility duplicate prevention auditability separation from electronic provider state rejection of unauthorized cash-state mutation 
 
-KYC testing must follow AG-06, AG-07, and AG-08.
+A payment-provider test must not silently become a cash-settlement test.
 
-Tests must cover:
+14. Idempotency and Replay Testing 
 
-KYC submission KYC document/reference handling authorized KYC access unauthorized KYC access KYC review KYC approval KYC rejection duplicate or invalid operations protected KYC document exposure external provider result validation prevention of client-side KYC approval 
+Testing must verify idempotency for operations capable of producing duplicate side effects.
 
-A client must never be able to make its own KYC approval authoritative.
+Coverage must include, where applicable:
 
-19. External Integration Testing 
+repeated API commands repeated payment requests repeated webhook events repeated refund requests repeated financial operations retry after timeout retry after connection failure duplicate notification processing replayed security-sensitive events 
 
-External integrations must be tested behind the boundaries defined by AG-08.
+Repeated valid processing must not create duplicate authoritative effects.
 
-Testing should use:
+Idempotency tests must verify both:
 
-mocks fakes contract tests integration tests failure simulations provider sandbox environments where approved 
+first processing behavior repeated processing behavior 15. External Integration Testing 
 
-Tests must cover:
+AG-08 owns external integration architecture.
 
-valid provider response malformed provider response timeout unavailable provider authentication failure rate limiting temporary network failure permanent provider rejection duplicate provider event invalid webhook replayed webhook provider reconciliation mismatch 
-
-Production provider credentials must never be required for ordinary automated tests.
-
-20. Webhook Testing 
-
-Webhook processing must be explicitly tested.
-
-Tests must verify:
-
-authenticity validation signature verification where supported timestamp validation where supported replay protection event identity idempotency payload validation safe retry behavior duplicate event handling auditability controlled failure behavior 
-
-A webhook must not be accepted merely because it reached an exposed endpoint.
-
-21. Idempotency and Retry Testing 
-
-Testing must verify all operations where retries could create duplicate side effects.
-
-Where applicable:
-
-payment mutations payment webhook processing financial settlement non-repeatable commands lifecycle commands notification actions external-provider operations 
-
-Tests must verify that repeated processing of the same valid idempotency key or provider event does not create duplicate authoritative effects.
-
-Unsafe retries must be rejected or controlled.
-
-22. Messaging Testing 
-
-Messaging tests must verify:
-
-conversation membership participant authorization unauthorized conversation access unauthorized message creation invalid message types invalid references oversized payload handling moderation restrictions where applicable message enumeration resistance notification recipient restrictions 
-
-A conversation identifier alone must never provide access.
-
-23. Location and Tracking Testing 
-
-Location testing must respect AG-04, AG-07, AG-08, and AG-09.
-
-Tests must verify:
-
-permission denial handling permission revocation handling unavailable location behavior authorized tracking access unauthorized tracking access purpose limitation minimum necessary exposure secure transport expectations retention behavior where applicable protection against treating tracking as proof of payment protection against treating tracking as proof of service completion 
-
-Background location behavior, if approved, must be separately tested.
-
-24. Notification Testing 
-
-Notification tests must verify:
-
-authorized recipients notification generation duplicate notification handling where required delivery failure handling retry behavior notification state delayed notification behavior lost notification behavior 
-
-Tests must verify that notification failure does not automatically mutate authoritative:
-
-service state payment state KYC state financial settlement 
-
-The backend remains authoritative.
-
-25. Android Testing Boundary 
-
-AG-09 defines Android-specific testing requirements.
-
-Android testing must cover, where applicable:
-
-UI state navigation authentication/session behavior authorization-aware presentation API client behavior request/offer flows lifecycle presentation location permissions tracking presentation notification handling payment interaction KYC presentation local persistence cache invalidation offline behavior retry behavior error handling security-sensitive client behavior lifecycle/process-death behavior 
-
-Android tests must not treat client-side state as authoritative business state.
-
-26. Local Storage Testing 
-
-Persistence and cache tests must verify:
-
-correct storage behavior cache invalidation stale-data handling offline behavior secure handling of sensitive material unauthorized local access protections where applicable recovery after process death consistency after reconnect 
-
-Tests must verify that local storage cannot become authoritative for:
-
-payment success KYC approval role assignment administrative privilege ownership protected lifecycle state financial settlement 27. Offline and Degraded-Network Testing 
-
-Tests must simulate:
-
-complete offline state intermittent connectivity timeout temporary server failure authentication expiration authorization failure validation failure permanent business rejection provider failure 
-
-The client must not blindly replay non-repeatable operations after reconnecting.
-
-Retry behavior must respect the API idempotency contract.
-
-28. Concurrency Testing 
-
-Testing must account for concurrent actors and devices.
-
-Where applicable, tests must verify:
-
-simultaneous offer creation simultaneous offer acceptance concurrent lifecycle transitions duplicate payment submission duplicate webhook delivery concurrent KYC actions concurrent administrative actions stale client state resource ownership changes session/permission changes during active operations 
-
-The server must resolve authoritative conflicts according to the approved domain and API contracts.
-
-29. Database and Persistence Testing 
-
-Data-access tests must verify the boundaries defined by AG-04 and AG-07.
-
-Testing must cover:
-
-entity relationships ownership constraints required fields valid references invalid references transaction integrity rollback behavior duplicate prevention migration compatibility where applicable protected access boundaries 
-
-Tests must verify that unauthorized components cannot directly mutate protected domain state.
-
-30. Error and Failure Testing 
-
-The system must be tested for controlled failure.
+AG-10 verifies integration behavior through controlled testing boundaries.
 
 Tests should cover:
 
-malformed requests authorization failures authentication failures unavailable dependencies database failures provider failures timeout duplicate events invalid state transitions invalid external responses unexpected but controlled domain conditions 
+provider success provider rejection timeout unavailable provider malformed provider response authentication failure provider rate limiting temporary network failure permanent failure duplicate event malformed webhook invalid webhook authenticity replayed webhook safe retry behavior reconciliation discrepancies 
 
-Failure handling must not create false successful business state.
+Production provider credentials must never be required for ordinary automated tests.
 
-31. Test Data Isolation 
+Provider mocks, fakes, sandboxes, or controlled test environments may be used as appropriate.
 
-Testing environments must be isolated from production data.
+16. Webhook Testing 
 
-Test data must:
+Webhook testing must verify the contract and security boundaries established by AG-05, AG-07, and AG-08.
 
-be synthetic where practical avoid unnecessary personal information never contain production secrets use dedicated credentials use controlled fixtures be reproducible where practical be disposable where appropriate 
+Tests must cover, where applicable:
 
-Production data must not be copied into ordinary development or automated test environments without an explicitly approved security process.
+valid webhook invalid signature missing authentication material malformed payload unknown event duplicate event replayed event invalid event identifier invalid state transition provider timeout/retry behavior idempotent processing safe failure audit/reference recording 
 
-32. Test Environment Boundaries 
+A webhook must never be accepted merely because it reached the endpoint.
 
-Test environments must preserve the same architectural boundaries as the application.
+17. KYC Testing 
 
-Testing must not bypass:
+KYC testing must preserve the authority boundaries established by AG-06, AG-07, and AG-08.
 
-API authorization domain ownership payment integration boundaries KYC boundaries security controls Android/backend boundaries 
+Tests should verify:
 
-Test-only shortcuts must not be allowed to become production architecture.
+KYC submission document/reference validation authorized KYC access unauthorized KYC access KYC review authorization approval authorization rejection authorization invalid state transitions external-provider result validation sensitive-document protection prevention of client-side KYC approval 
 
-33. Test Doubles and External Providers 
+A client or external provider response must not automatically become unrestricted NIDDE authorization.
 
-Mocks, fakes, and stubs may be used to isolate dependencies.
+18. Messaging Testing 
 
-They must preserve the relevant contract.
+Messaging tests must verify:
 
-A mock must not falsely guarantee behavior that the real integration cannot provide.
+conversation membership participant authorization unauthorized conversation access prevention message creation authorization allowed message types content/reference validation lifecycle restrictions where applicable duplicate message protection where required moderation restrictions message enumeration protection 
 
-Critical provider behavior must also be covered by appropriate contract or integration testing.
+A conversation identifier alone must never authorize access.
 
-34. Critical End-to-End Flows 
+19. Notification Testing 
 
-The testing architecture must support end-to-end verification of critical paths.
+Notification testing must verify:
 
-Client 
+authorized recipient notification creation notification delivery handling duplicate notification handling delayed delivery failed delivery retry behavior notification state retrieval 
 
-Registration
-→ Login
-→ Search
-→ Request
-→ Receive Offers
-→ Select
-→ Service
-→ Payment
-→ Review
+Tests must verify that notification failure does not automatically mutate:
 
-Artisan 
+service state payment state KYC approval financial settlement 
 
-Registration
-→ KYC
-→ Approval
-→ Online
-→ Receive Request
-→ Offer
-→ Accept
-→ Execute
-→ Complete
-→ Payout
+Backend domain state remains authoritative.
 
-Company 
+20. Location and Tracking Testing 
 
-Registration
-→ KYC
-→ Approval
-→ Provider Operations
-→ Receive Request
-→ Offer
-→ Accept
-→ Execute
-→ Complete
-→ Payout
+Location and tracking tests must respect AG-04, AG-07, AG-08, and AG-09.
 
-Admin 
+Tests should cover:
 
-Only where an approved administrative interface exists:
+authorized location access unauthorized location access permission denial permission revocation unavailable location degraded location restricted exposure lifecycle restrictions retention behavior where testable tracking update handling 
 
-Login
-→ Administrative Authentication
-→ Authorized Management
-→ Orders
-→ KYC
-→ Payments
-→ Complaints/Moderation
-→ Logs
-→ Analytics
+Tests must verify that tracking information is not independently treated as proof of:
 
-Every critical flow must verify both successful and prohibited paths.
+payment service completion cash settlement 21. Android Testing Boundary 
 
-35. Regression Testing 
+AG-09 defines Android architecture.
 
-Regression testing must protect previously verified architecture contracts.
+AG-10 defines the testing architecture used to verify it.
 
-Regression coverage must include, where applicable:
+Android testing must cover, where applicable:
 
-API contract compatibility authorization boundaries ownership rules lifecycle semantics payment authority KYC authority security controls integration boundaries Android/backend compatibility idempotency error contracts 
+UI state navigation authentication/session behavior authorization-aware presentation API client behavior request/offer flows lifecycle presentation location behavior notification handling payment interaction KYC presentation local persistence cache invalidation offline behavior degraded connectivity error presentation duplicate-operation prevention lifecycle/process-death behavior 
 
-A new implementation must not silently invalidate an earlier approved gate.
+The Android client must not be tested as an authoritative business authority.
 
-36. Architecture Contract Testing 
+22. Local Storage and Cache Testing 
 
-The test suite should provide automated evidence that implementation remains compatible with approved architecture.
+Tests must verify that local persistence does not become an alternative source of truth.
 
-Where applicable, architecture checks should verify:
+Coverage should include:
 
-forbidden dependencies forbidden direct database access forbidden provider coupling API contract compatibility package/module boundaries secret-handling rules unauthorized state mutation paths prohibited client authority assumptions 
+cache creation cache retrieval cache invalidation stale data handling refresh behavior logout/session clearing where required sensitive-data protection offline read behavior synchronization after reconnection 
 
-Architecture tests must fail when implementation crosses an approved boundary.
+Tests must verify that local state cannot authoritatively establish:
 
-37. Test Coverage Principles 
+role ownership payment success KYC approval administrative privilege protected lifecycle state 23. Offline and Degraded-Network Testing 
 
-Coverage must be risk-based rather than based only on a numeric percentage.
+Testing must distinguish:
 
-Highest-priority coverage includes:
+offline timeout temporary server failure authentication expiration authorization failure validation failure permanent business rejection provider failure 
 
-authentication authorization ownership lifecycle transitions payment operations KYC authorization webhook processing idempotency sensitive-data handling administrative operations external integration failures Android security-sensitive behavior 
+Tests must verify that reconnecting does not blindly replay non-repeatable operations.
 
-A high coverage percentage does not compensate for missing critical security or business-rule tests.
+Financial and other side-effect-producing operations must use the approved idempotency mechanism.
 
-38. Test Evidence 
+24. Security Testing Coordination 
 
-Verification evidence should identify:
+AG-07 owns the security model.
 
-test scope test environment test version relevant architecture gate test results failed tests resolved failures known limitations contract verification evidence security verification evidence where applicable 
+AG-10 verifies security requirements through testing.
 
-Evidence must be traceable to the architecture requirement being verified.
+Security testing must cover, where applicable:
 
-39. CI/CD Boundary 
+authentication authorization ownership enforcement input validation injection protection rate-limit behavior abuse controls payment webhook validation replay protection KYC access administrative authorization sensitive-data exposure secret leakage API abuse unsafe error disclosure 
+
+AG-10 must not redefine AG-07 security policy.
+
+25. Input and Validation Testing 
+
+Tests must verify externally supplied input handling including:
+
+required fields data types allowed values length limits numeric ranges identifiers state compatibility ownership authorization domain eligibility malformed payloads unexpected fields where applicable 
+
+Validation failures must not cause partial authoritative mutations.
+
+26. Abuse and Rate-Control Testing 
+
+AG-07 owns security policy.
+
+AG-10 must provide testing coverage for the applicable controls.
+
+Tests may verify:
+
+authentication attempt limits account-recovery controls request creation controls offer creation controls messaging controls payment controls KYC controls administrative controls webhook processing controls resource-discovery protections 
+
+Exact production thresholds must be taken from the approved implementation/security configuration and must not be invented by tests.
+
+27. Test Data 
+
+Test data must be:
+
+deterministic where possible isolated from production data minimal non-sensitive where possible reproducible traceable to the test scenario safely disposable 
+
+Real production credentials, payment secrets, KYC documents, private keys, and other production secrets must never be used in ordinary automated tests.
+
+Synthetic identities and controlled fixtures should be preferred.
+
+28. Sensitive Data in Tests 
+
+Tests and test artifacts must not expose:
+
+passwords authentication tokens private keys payment secrets webhook secrets production credentials complete sensitive KYC documents unnecessary personal information 
+
+Test logs and failure reports must follow AG-07 data-minimization requirements.
+
+29. Failure and Recovery Testing 
+
+Critical components must be tested under controlled failure conditions.
+
+Examples include:
+
+database unavailable API timeout provider timeout malformed provider response authentication failure authorization failure network interruption duplicate event process interruption application restart Android process death permission revocation expired session partial operation failure 
+
+The system must fail safely without creating false authoritative state.
+
+30. Concurrency Testing 
+
+Where multiple actors may change the same resource, testing must consider concurrent operations.
+
+Examples include:
+
+simultaneous offer acceptance competing offers concurrent lifecycle transitions duplicate payment commands repeated webhook delivery simultaneous administrative actions stale Android client state 
+
+Tests must verify that the server preserves authoritative consistency.
+
+A stale client must not overwrite newer authoritative state merely because it submitted an older value.
+
+31. Regression Testing 
+
+Every resolved architecture defect or implementation defect that affects an approved contract should result in an appropriate regression test.
+
+Regression coverage should protect:
+
+ownership rules authorization boundaries lifecycle transitions payment authority KYC authority webhook idempotency sensitive-data handling Android/backend compatibility API contract behavior 
+
+Regression tests must remain aligned with the latest verified architecture.
+
+32. Contract Compatibility Testing 
+
+Cross-gate compatibility must be verified without changing gate ownership.
+
+Testing must verify:
+
+AG-03 ↔ AG-04 
+
+System responsibilities remain compatible with data ownership.
+
+AG-04 ↔ AG-05 
+
+API operations respect entity ownership and lifecycle semantics.
+
+AG-05 ↔ AG-06 
+
+Protected API operations have corresponding authentication/authorization requirements.
+
+AG-05 ↔ AG-07 
+
+API behavior follows security and error-disclosure requirements.
+
+AG-05 ↔ AG-08 
+
+External-provider/webhook contracts remain compatible with integration boundaries.
+
+AG-08 ↔ AG-09 
+
+Android does not bypass protected integration boundaries.
+
+AG-09 ↔ AG-10 
+
+Android testing verifies the approved Android architecture without becoming a second authority.
+
+AG-10 ↔ AG-11 
+
+Tests can be executed through the approved CI/CD architecture without AG-10 owning CI/CD orchestration.
+
+AG-10 ↔ AG-12 
+
+Testing requirements are compatible with approved production architecture and environments.
+
+AG-10 ↔ AG-13 
+
+Release verification requirements can consume approved test evidence without redefining release authority.
+
+33. CI/CD Boundary 
 
 AG-11 owns CI/CD architecture.
 
-AG-10 defines the testing requirements that CI/CD must execute or enforce.
+AG-10 defines what must be tested.
 
-These may include:
+AG-11 defines how and where automated testing is executed in CI/CD.
 
-automated unit tests domain tests contract tests integration tests security tests Android tests architecture checks regression tests 
+Therefore:
 
-AG-10 must not define the CI/CD implementation itself.
+AG-10 must not define CI/CD workflow implementation AG-10 must not define deployment pipelines AG-10 must not redefine build infrastructure AG-11 must consume the test requirements defined by AG-10 
 
-40. Production Boundary 
+A test requirement may be a CI/CD quality gate without making AG-10 the owner of the CI/CD mechanism.
+
+34. Production Boundary 
 
 AG-12 owns production architecture.
 
-AG-10 defines testing requirements that production readiness must satisfy, including where applicable:
+AG-10 defines testing requirements that production architecture must support, such as:
 
-production-like integration verification migration verification backup/recovery testing monitoring-related validation security validation critical-flow verification 
+safe test environments controlled test data observability verification failure testing backup/recovery verification where applicable production-readiness evidence 
 
-Production testing must not use unsafe shortcuts that bypass production security boundaries.
+AG-10 must not redefine production infrastructure.
 
-41. Release Boundary 
+35. Release Boundary 
 
 AG-13 owns release architecture.
 
-AG-10 provides test evidence required for release readiness.
+AG-10 provides verified test evidence required by release readiness.
 
-A release must not be considered technically ready when required critical tests remain unresolved.
+AG-10 does not:
 
-AG-10 does not define release approval authority.
+approve production release independently define release versioning define release deployment procedures replace AG-13 release authority 
 
-42. Cross-Gate Consistency 
+A release must not claim testing completion without the required evidence.
 
-AG-10 must remain consistent with:
+36. Test Environment Separation 
 
-AG-03:
+Testing must distinguish appropriately between:
 
-system boundaries dependency ownership service responsibilities 
+local development testing automated test environments integration/sandbox environments staging/pre-production environments production 
 
-AG-04:
+Production must not be used as an ordinary automated test environment.
 
-entities relationships ownership lifecycle location payment cash transactions KYC notifications 
+Real production secrets must not be copied into lower environments.
 
-AG-05:
+Environment-specific configuration must remain compatible with AG-07, AG-08, AG-11, and AG-12.
 
-API contracts validation errors pagination idempotency versioning webhook-related requirements 
+37. Test Evidence 
 
-AG-06:
+Testing must produce sufficient evidence to establish:
 
-identity authentication roles permissions ownership session requirements administrative authorization 
+test identity tested contract/feature test result relevant environment relevant version/commit failure information where applicable regression coverage where required 
 
-AG-07:
+Evidence must be traceable without exposing secrets or unnecessary sensitive information.
 
-security controls sensitive data secrets abuse controls logging audit requirements secure failure behavior 
+Architecture verification must not rely solely on an unverified statement that tests passed.
 
-AG-08:
-
-provider boundaries payment integrations maps notifications KYC secure storage webhook handling retries reconciliation 
-
-AG-09:
-
-Android architecture client authority boundary local storage offline behavior permissions location notifications payment interaction Android testing 
-
-AG-10 must not introduce a contradiction with any approved earlier gate.
-
-43. Verification Criteria 
+38. Verification Criteria 
 
 AG-10 may become VERIFIED only when:
 
-its scope matches the canonical AG-10 definition testing responsibilities are clearly separated from implementation domain tests align with AG-04 API tests align with AG-05 authentication and authorization tests align with AG-06 security tests align with AG-07 external integration tests align with AG-08 Android testing aligns with AG-09 lifecycle testing preserves AG-04 authority payment testing preserves server authority KYC testing preserves server authority webhook testing preserves integration security idempotency and retry behavior are tested sensitive test data is protected test environments remain isolated CI/CD requirements remain compatible with AG-11 production requirements remain compatible with AG-12 release requirements remain compatible with AG-13 no unresolved blocking contradiction exists required verification evidence is recorded 
+its scope matches the canonical AG-10 definition AG-03 through AG-09 responsibilities remain respected AG-04 ownership and lifecycle semantics are correctly tested AG-05 API contracts are testable AG-06 authentication and authorization boundaries are testable AG-07 security requirements have corresponding testing coverage AG-08 integration and webhook boundaries are testable AG-09 Android testing requirements are mapped idempotency and replay behavior are covered payment and cash boundaries are preserved KYC authority is preserved location/tracking privacy requirements are testable notification behavior cannot become business-state authority offline/degraded behavior is covered sensitive test data is controlled AG-11 CI/CD ownership is preserved AG-12 production ownership is preserved AG-13 release ownership is preserved no unresolved blocking contradiction exists required verification evidence is recorded 
 
 READY FOR VERIFICATION does not mean VERIFIED.
 
-44. Implementation Lock 
+39. Implementation Lock 
 
 AG-10 does not authorize implementation.
 
@@ -542,21 +493,17 @@ LOCKED
 
 until the complete canonical architecture sequence and final readiness conditions are satisfied.
 
-No production application, backend, Android, database, CI/CD, or infrastructure implementation should be created solely because AG-10 has been written.
+No production application source code, CI/CD workflow, infrastructure, or release configuration should be created solely because AG-10 has been written.
 
-45. Control Statement 
+40. Control Statement 
 
 AG-10 establishes the testing architecture boundary for NIDDE.
 
-Testing exists to verify that implementation conforms to the approved architecture and domain contracts.
+Testing verifies the approved architecture and implementation behavior but does not become an authoritative business layer.
 
-Testing must preserve backend authority for identity, authorization, ownership, lifecycle, payments, KYC, financial state, and other protected business decisions.
+AG-10 must remain compatible with AG-03 through AG-09 and must provide the testing requirements consumed by AG-11 through AG-13 without redefining their ownership.
 
-Testing must preserve the external integration boundaries defined by AG-08 and the Android client boundary defined by AG-09.
-
-AG-10 must remain compatible with AG-03 through AG-09 and provide the testing requirements consumed by AG-11 through AG-13.
-
-No test-only shortcut may silently redefine an approved architecture contract.
+No test, fixture, mock, sandbox, or test environment may silently redefine an approved NIDDE architecture contract.
 
 AG-10 STATUS: READY FOR VERIFICATION
 
