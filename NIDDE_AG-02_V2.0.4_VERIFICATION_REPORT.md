@@ -1,56 +1,138 @@
-# NIDDE — AG-02 V2.0.4 Verification Report
+NIDDE — AG-02 V2.0.4 Review Report 
 
-**Project:** NIDDE  
-**Gate:** AG-02 — Repository & System Architecture  
-**Revision:** V2.0.4  
-**Result:** VERIFIED  
-**Application implementation:** LOCKED  
-**Physical-file count:** NOT YET CALCULATED
+Project: NIDDE
+Gate: AG-02 — Repository Structure
+Revision: V2.0.4
+Review Status: SUPERSEDED BY VERIFIED EVIDENCE
+Gate Status: VERIFIED
+Application Implementation: LOCKED
+Physical-File Count: NOT YET CALCULATED
 
-## Verification Evidence
+1. Purpose 
 
-1. **Static/document consistency:** PASS
-   - Canonical top-level boundaries are explicitly defined.
-   - `.github/` is separated from `infrastructure/`.
-   - CI/CD final ownership remains delegated to AG-11.
+This document records the review history of the AG-02 repository-structure correction.
 
-2. **Compatibility with AG-01:** PASS
-   - AG-01 is recorded as VERIFIED.
-   - AG-02 does not alter the approved technology stack.
+It is a review/evidence document only.
 
-3. **Boundary/dependency review:** PASS
-   - `backend/`, `database/`, `shared/`, `android/`, `admin/`, `tests/`, `docs/`, and `infrastructure/` have distinct responsibilities.
-   - Cross-boundary reuse is required to be explicit.
-   - Final dependency graph remains subject to AG-03 and later gates.
+It does not override the canonical AG-02 architecture document, the canonical Master File Manifest, or the current Project Control.
 
-4. **Security/configuration review:** PASS
-   - Secrets are prohibited from committed source/configuration.
-   - `.env.example` is retained as a non-secret template.
+The authoritative AG-02 decision is:
 
-5. **Repository registration check:** PASS
-   - The current GitHub root listing supplied during execution contains the canonical control/manifest/root documentation and the AG-02 artifact.
-   - `NIDDE_PROJECT_CONTROL.md` is present in the repository.
-   - No application implementation files are being authorized by this gate.
+AG-02 = VERIFIED 2. Issue Reviewed 
 
-6. **Physical-file inventory:** DEFERRED by design until AG-01 through AG-13 are complete.
+The review identified an ambiguity in the repository boundary concerning:
 
-## Gate Decision
+.github/ .github/workflows/ infrastructure/ CI/CD ownership 
 
-**AG-02 = VERIFIED.**
+The original ambiguity could have allowed overlapping interpretation of repository-platform automation and infrastructure responsibilities.
 
-The repository boundary is accepted. The next authorized architecture gate is **AG-03**, subject to its dependency prerequisites and verification rules.
+3. Approved Resolution 
 
-## Lock State
+The correction established the following boundaries:
 
-```text
-APPLICATION IMPLEMENTATION = LOCKED
-PHYSICAL FILE COUNT = NOT YET CALCULATED
-NEXT ARCHITECTURE GATE = AG-03
-```
+.github/ 
 
-## Rules
+.github/ is reserved for GitHub-native repository configuration and GitHub-required workflow files.
 
-- No application implementation is authorized by AG-02.
-- No final physical-file count is created by AG-02.
-- Any new top-level boundary requires Change Request and impact assessment.
-- AG-11 remains authoritative for final CI/CD architecture and workflow policy.
+This includes:
+
+.github/ └── workflows/ 
+
+.github/ must not contain:
+
+application runtime source code backend business logic Android application implementation database implementation deployment infrastructure duplicate CI/CD implementations outside the approved GitHub-native boundary infrastructure/ 
+
+infrastructure/ owns non-GitHub-native infrastructure and operational configuration, subject to the later architecture gates.
+
+This may include, where approved:
+
+deployment configuration environment orchestration monitoring configuration logging infrastructure backup/recovery configuration production validation tooling non-GitHub-native CI/CD supporting configuration CI/CD Ownership 
+
+AG-11 remains authoritative for:
+
+final CI/CD architecture workflow policy validation order security checks artifact handling deployment gates CI/CD dependency rules 
+
+AG-02 does not define the implementation of CI/CD.
+
+4. Verification Result 
+
+The following checks are accepted:
+
+Check Result Canonical top-level repository boundaries PASS .github/ boundary PASS .github/workflows/ boundary PASS infrastructure/ boundary PASS CI/CD ownership separation PASS AG-01 compatibility PASS Module-boundary consistency PASS Naming rules PASS Configuration boundary PASS Test/documentation boundaries PASS Security/configuration boundary PASS Forbidden duplicate structures PASS Repository registration PASS Application implementation authorization LOCKED Physical-file inventory DEFERRED BY DESIGN 5. Final Gate Decision 
+
+The previous review state:
+
+BLOCKED — NOT VERIFIED 
+
+is historical and is superseded by the completed verification evidence.
+
+The final decision is:
+
+AG-02 = VERIFIED 
+
+The verified AG-02 artifact is:
+
+NIDDE_AG-02_REPOSITORY_STRUCTURE_V2.0.4_VERIFIED.md 
+
+The corresponding verification evidence is:
+
+NIDDE_AG-02_V2.0.4_VERIFICATION_REPORT.md 
+
+The current Project Control also records:
+
+AG-02 — Repository Structure = VERIFIED APPLICATION IMPLEMENTATION = LOCKED PHYSICAL-FILE COUNT = NOT YET CALCULATED 6. Source-of-Truth Rule 
+
+If this review document conflicts with another NIDDE document, the following order applies:
+
+NIDDE_MASTER_FILE_MANIFEST.md NIDDE_PROJECT_CONTROL.md Verified architecture-gate document Verified verification evidence This review-history document Unverified drafts or superseded documents 
+
+This review document must never be used to downgrade a verified gate.
+
+7. Physical-File Inventory 
+
+AG-02 does not calculate or lock the final physical-file inventory.
+
+The physical-file inventory remains deferred until:
+
+AG-01 → AG-02 → AG-03 → AG-04 → AG-05 → AG-06 → AG-07 → AG-08 → AG-09 → AG-10 → AG-11 → AG-12 → AG-13 
+
+have been resolved according to the canonical architecture process.
+
+No wildcard, placeholder, guessed file, or conceptual module may be used as a physical-file record.
+
+8. Implementation Lock 
+
+AG-02 does not authorize application implementation.
+
+The repository boundary is verified, but:
+
+APPLICATION IMPLEMENTATION = LOCKED 
+
+No application source code may be created solely because AG-02 is verified.
+
+9. Recovery Rule 
+
+After an interruption:
+
+Read NIDDE_PROJECT_CONTROL.md. Read the canonical Master File Manifest. Inspect the repository state. Confirm AG-02 verification evidence. Determine the first unverified architecture gate whose prerequisites are satisfied. Continue from that gate. 
+
+Progress must not be inferred from conversation memory alone.
+
+10. Final Control Statement 
+
+The AG-02 repository-boundary ambiguity has been resolved.
+
+The .github/ and infrastructure/ boundaries are separated.
+
+CI/CD architecture remains owned by AG-11.
+
+The previous BLOCKED — NOT VERIFIED review state is historical and no longer represents the gate status.
+
+AG-02 STATUS: VERIFIED APPLICATION IMPLEMENTATION: LOCKED PHYSICAL-FILE COUNT: NOT YET CALCULATED NEXT ARCHITECTURE GATE: AG-03 
+
+AG-02 REVIEW: CLOSED
+
+AG-02 STATUS: VERIFIED
+
+IMPLEMENTATION: LOCKED
+
