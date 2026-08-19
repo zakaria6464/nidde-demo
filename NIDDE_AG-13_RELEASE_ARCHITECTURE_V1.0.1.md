@@ -9,451 +9,385 @@ Implementation: LOCKED
 
 1. Purpose 
 
-AG-13 defines the release architecture required by NIDDE before implementation is considered ready for controlled release.
+AG-13 defines the release architecture required by NIDDE before implementation and production release.
 
 This document is an architecture contract.
 
-It defines release governance, release readiness, artifact requirements, versioning, compatibility, approval boundaries, rollback expectations, release evidence, and final release controls.
+It defines release authority, readiness conditions, release artifacts, approval boundaries, release verification, rollback coordination, release evidence, versioning, and post-release verification.
 
-It does not implement application code, CI/CD workflows, deployment infrastructure, production infrastructure, Android source code, database migrations, or external provider integrations.
+It does not implement release workflows, CI/CD pipelines, application source code, infrastructure, deployment scripts, or production configuration.
 
 2. Scope 
 
 AG-13 owns:
 
-release governance release readiness requirements release artifact requirements release versioning release compatibility requirements release approval boundaries release evidence release candidate requirements release validation requirements rollback requirements release traceability release documentation release integrity requirements final architecture-to-release consistency 
+release authority release readiness release gates release artifact requirements release versioning release approval release evidence release verification release coordination rollback/recovery release decisions post-release verification release traceability release documentation requirements 
 
 The following remain owned by their respective gates:
 
-AG-02 — Repository Structure AG-03 — System / Dependency Architecture AG-04 — Data Model AG-05 — API Contract AG-06 — Authentication / Authorization AG-07 — Security Model AG-08 — External Integrations AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture 
+AG-03 — System / Dependency Architecture AG-04 — Data Model AG-05 — API Contract AG-06 — Authentication / Authorization AG-07 — Security Model AG-08 — External Integrations AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture 
 
 AG-13 must not redefine the scope of another gate.
 
 3. Release Authority 
 
-A release is permitted only when all required architecture, implementation, testing, security, CI/CD, and production conditions have been satisfied.
+AG-13 is the final architecture gate for release authorization.
 
-AG-13 does not override an earlier gate.
+Release authorization requires evidence that the required architecture and implementation conditions have been satisfied.
 
-A release must not proceed when a required gate remains:
+CI/CD execution does not equal release authorization.
 
-unverified blocked contradictory incomplete missing required evidence 
+Production deployment does not equal release authorization.
 
-READY FOR VERIFICATION does not mean VERIFIED.
+A successful build does not equal release authorization.
 
-Architecture readiness and release readiness are separate decisions.
+A release must not be considered approved solely because:
 
-4. Source of Truth 
+tests passed an artifact was generated CI/CD completed deployment succeeded the application starts successfully 
 
-Release decisions must respect the approved project control hierarchy.
+Release authority remains controlled by the approved release process.
 
-Release validation must remain consistent with:
+4. Release Principles 
 
-canonical master file manifest project control verified repository structure verified system/dependency architecture verified data model verified API contract verified authentication/authorization architecture verified security model verified external integration architecture verified Android architecture verified testing architecture verified CI/CD architecture verified production architecture approved release requirements 
+NIDDE releases must follow:
 
-An unverified or obsolete document must not silently override a verified contract.
+controlled approval traceability reproducibility evidence-based readiness least privilege separation of duties where appropriate explicit versioning controlled rollback protected production access secure artifact handling no release with unresolved blocking architectural contradictions 
 
-5. Release State Model 
+A release must correspond to a known and traceable source state.
 
-A release candidate should progress through controlled states.
+5. Release Readiness 
 
-Recommended release states:
+A release may proceed only when all required readiness conditions are satisfied.
 
-PLANNED → PREPARED → CANDIDATE → VERIFIED → APPROVED → RELEASED
+Readiness must consider, where applicable:
 
-A release may enter:
+architecture verification implementation verification testing results security verification dependency status API compatibility database compatibility external integration readiness Android compatibility CI/CD readiness production readiness operational readiness release documentation rollback/recovery readiness 
 
-BLOCKED
+Unresolved blocking issues must prevent release approval.
 
-whenever a required verification, test, security check, compatibility check, or production condition fails.
+6. Architecture Gate Completion 
 
-A release must not transition to RELEASED while a blocking condition remains unresolved.
+Before release approval, the applicable architecture gates must have the required status.
 
-6. Release Candidate 
+The canonical sequence includes:
 
-A Release Candidate (RC) must represent a specific, traceable version of the intended release.
+AG-03 — System / Dependency Architecture AG-04 — Data Model AG-05 — API Contract AG-06 — Authentication / Authorization AG-07 — Security Model AG-08 — External Integrations AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture AG-13 — Release Architecture 
 
-The RC must have:
+A document marked:
 
-unique version identifier source revision identifier reproducible build information associated architecture revision associated test evidence associated security evidence where required associated CI/CD evidence associated production-readiness evidence release notes or equivalent change record known limitations documented where applicable 
+READY FOR VERIFICATION
 
-An RC must not contain uncontrolled local modifications.
+must not be treated as:
 
-7. Versioning 
+VERIFIED
 
-Release versions must be explicit and traceable.
+Release readiness must use the actual approved verification state.
 
-A release identifier must allow the team to determine:
+7. Release Artifact 
 
-which application version was released which API compatibility level applies which source revision produced the artifact which configuration/environment applies which architecture revision was approved 
+Every release must identify the exact artifact intended for release.
 
-Breaking changes must not be hidden inside a release.
+The release record should identify, where applicable:
 
-API breaking changes remain governed by AG-05.
+application version backend version artifact identifier source revision build identifier environment dependency state release timestamp release owner/authority 
 
-Android compatibility remains governed by AG-09.
+Artifacts must be reproducible or traceable to the approved build process.
 
-Production compatibility remains governed by AG-12.
+Unknown or untraceable artifacts must not be released.
 
-8. Repository Integrity 
+8. Source Traceability 
 
-The release source must originate from the controlled repository state.
+Every release must be traceable to a known source state.
 
-Release artifacts must not depend on:
+Traceability should include:
 
-uncommitted source changes developer-local files undeclared credentials untracked configuration undocumented manual modifications local database state private machine-specific dependencies 
+repository revision approved branch/tag where applicable build identifier artifact identifier relevant configuration version dependency versions 
 
-Repository structure and required release files must remain compatible with AG-02.
+Release artifacts must not be silently replaced after approval.
 
-The release process must preserve traceability between repository revision and produced artifacts.
+If the artifact changes materially, release readiness must be reassessed.
 
-9. Build Artifact Requirements 
+9. Versioning 
 
-Every releasable artifact must be identifiable and reproducible to the extent required by the implementation environment.
+Release versions must follow the approved project versioning strategy.
 
-Android release artifacts must be produced according to the build architecture defined by AG-09 and CI/CD controls defined by AG-11.
+A release version must uniquely identify the released state.
 
-Production artifacts must follow AG-12 requirements.
+Breaking changes must respect AG-05 API versioning requirements.
 
-Release artifacts must not contain:
+Database/data-model changes must respect AG-04 compatibility requirements.
 
-production secrets in source-controlled configuration private keys exposed through application resources debugging credentials test credentials unintended development endpoints unauthorized administrative configuration 10. API Compatibility 
+Android changes must remain compatible with AG-09.
 
-Release validation must confirm compatibility between the released Android client and approved API contracts.
+Release numbering must not silently conceal a breaking architectural change.
 
-AG-05 remains authoritative for API contracts.
+10. Testing Readiness 
 
-A release must verify, where applicable:
+AG-10 owns testing architecture.
 
-API version compatibility request/response compatibility authentication compatibility authorization behavior pagination compatibility error contract compatibility idempotency behavior lifecycle compatibility payment operation compatibility 
+Before release, the required tests must provide evidence appropriate to the release scope.
 
-If the client requires an API contract that has not been approved, the release must be blocked.
+Testing evidence may include:
 
-11. Data Model Compatibility 
+unit tests integration tests API contract tests security tests authorization tests ownership tests lifecycle tests payment tests webhook tests KYC tests Android tests offline/retry tests regression tests 
 
-Release artifacts must remain compatible with the approved data model.
+The exact test suite is determined by the approved testing architecture and implementation.
 
-AG-04 remains authoritative for:
+A release must not ignore a known blocking test failure.
 
-entity ownership relationships lifecycle payment concepts cash transactions KYC location/tracking messaging notifications reviews 
+11. Security Readiness 
 
-Database changes must follow the approved migration and production procedures.
+AG-07 owns security architecture.
 
-A release must not silently introduce a new authoritative owner for an existing entity.
+Release readiness must verify that required security conditions are satisfied.
 
-12. Authentication and Authorization Compatibility 
+Security release checks should consider:
 
-Release validation must confirm compatibility with AG-06.
+secret leakage credential exposure dependency vulnerabilities authentication behavior authorization behavior sensitive-data exposure API abuse controls payment security webhook security KYC security production configuration logging safety 
 
-The released system must preserve:
+Production secrets must never be included in release artifacts or source control.
 
-authenticated identity role boundaries resource ownership authorization decisions administrative privilege boundaries session behavior account recovery requirements KYC authorization boundaries 
+12. API Compatibility 
 
-The Android client must not become authoritative for:
+AG-05 owns the API contract.
 
-roles permissions ownership KYC approval payment success protected lifecycle state 
+Before release:
 
-A release must be blocked if client behavior bypasses server authorization.
+API changes must be identified breaking changes must be controlled Android/API compatibility must be checked clients must not rely on unapproved fields or behavior migration requirements must be identified where applicable 
 
-13. Security Release Gate 
+A release must not silently change an approved API contract.
 
-Security requirements defined by AG-07 must be satisfied before release.
+13. Database and Data Compatibility 
 
-Release security validation must consider, where applicable:
+AG-04 owns the data model.
 
-secret leakage credential exposure unsafe logging authorization bypass ownership bypass sensitive-data exposure injection vulnerabilities insecure external integration behavior webhook security replay protection rate/abuse controls payment security KYC protection administrative access protection 
+Release preparation must verify compatibility between:
 
-Known unresolved critical security issues block release.
+application version API contract database schema data migrations existing production data 
 
-Security evidence must be retained according to the approved project process.
+Data migrations must be controlled and reversible or recoverable where technically appropriate.
 
-14. External Integration Release Gate 
+A release must not corrupt or silently redefine authoritative data.
 
-External integrations must remain compatible with AG-08.
+14. External Integration Readiness 
 
-Release validation must consider:
+AG-08 owns external integrations.
 
-provider credentials provider configuration API compatibility payment integration webhook configuration webhook authenticity idempotency retry behavior timeout behavior notification providers maps/geocoding/routing KYC providers secure storage reconciliation 
+Before release, applicable integrations must be verified for:
 
-A provider failure must not cause an unauthorized or false authoritative business state.
+credentials/configuration provider availability webhook configuration signature/authenticity verification idempotency timeout/retry behavior failure handling reconciliation provider compatibility 
 
-Production provider configuration remains subject to AG-12.
+Provider-specific failures must not become false successful business states.
 
-15. Android Release Gate 
+15. Android Release Readiness 
 
-Android releases must comply with AG-09.
+AG-09 owns Android architecture.
 
-Release validation must confirm:
+Android release readiness must verify:
 
-approved package/application identity correct environment configuration secure authentication/session handling API compatibility correct navigation boundaries permission behavior location behavior notification behavior payment interaction KYC presentation offline/degraded behavior safe error handling absence of production secrets release/debug separation 
+approved API compatibility authentication/session behavior authorization-aware UI behavior lifecycle handling location behavior notification behavior payment interaction KYC presentation offline/retry behavior secure local storage release configuration 
 
-The Android application must remain an untrusted client.
+The Android client must never become authoritative for protected business state.
 
-16. Testing Evidence 
-
-Release approval requires the applicable testing evidence defined by AG-10.
-
-Testing must provide sufficient evidence for:
-
-functional behavior API contracts authentication authorization ownership lifecycle payment KYC messaging notifications location Android behavior security-sensitive flows failure handling retry/idempotency behavior 
-
-A release must not rely solely on manual testing where automated testing is required by the approved testing architecture.
-
-17. CI/CD Release Boundary 
+16. CI/CD Boundary 
 
 AG-11 owns CI/CD architecture.
 
-AG-13 consumes CI/CD evidence rather than redefining CI/CD implementation.
+AG-13 consumes CI/CD evidence but does not redefine CI/CD implementation.
 
-Release automation must provide, where applicable:
+CI/CD may:
 
-source traceability controlled build process required automated checks artifact generation test evidence security checks environment separation approval controls release traceability 
+build artifacts run automated checks run tests perform security checks package artifacts deploy through approved mechanisms 
 
-A manual workaround must not silently bypass required CI/CD controls.
+CI/CD completion does not automatically approve a release.
 
-18. Production Readiness 
+Release authorization remains under AG-13.
+
+17. Production Boundary 
 
 AG-12 owns production architecture.
 
-AG-13 requires evidence that the production environment is ready according to AG-12.
+Before release approval, production readiness must be confirmed for the applicable release.
 
-This includes, where applicable:
+This may include:
 
-required infrastructure environment configuration secret management database readiness monitoring logging backups recovery controls external integrations operational access security controls capacity/readiness requirements 
+runtime readiness configuration readiness database readiness secret availability monitoring alerting backups recovery capability network configuration external integration readiness operational access 
 
-AG-13 must not redefine production architecture.
+Production deployment success does not independently authorize release.
 
-19. Configuration Management 
+18. Release Approval 
 
-Release configuration must be explicitly separated by environment.
+Release approval must be explicit.
 
-At minimum, the release process must distinguish:
+The release record should identify:
 
-development testing staging/pre-production where applicable production 
+release version release artifact source revision verification status approval status release authority release timestamp relevant evidence 
 
-Production configuration must not be accidentally reused in development or testing.
+Approval must not be inferred from an automated deployment result.
 
-Sensitive configuration must be supplied through approved secret/configuration mechanisms.
+19. Release Blocking Conditions 
 
-.env.example may contain only safe variable names and placeholders.
+Release must be blocked when applicable if:
 
-Actual credentials must never be committed to Git.
+a required architecture gate is unresolved a blocking security issue exists a blocking test failure exists an artifact is not traceable required production configuration is missing required secrets are unavailable or unsafe database compatibility is unresolved API compatibility is unresolved critical integration readiness is unresolved rollback/recovery capability is inadequate for the release risk required approval evidence is missing a known blocking contradiction exists 
 
-20. Database and Migration Release Safety 
+Blocking conditions must be resolved before release authorization.
 
-Database changes must be controlled.
+20. Release Exceptions 
 
-A release containing database changes must identify:
+Any exception to normal release requirements must be:
 
-migration requirements compatibility requirements migration order rollback implications data-impact considerations verification requirements 
+explicitly identified justified risk-assessed approved by the appropriate authority documented traceable 
 
-Database migrations must not be executed through uncontrolled client behavior.
+An exception must not silently redefine an architecture contract.
 
-The Android application must never directly modify authoritative production database state.
+Critical security or data-integrity requirements must not be bypassed merely to accelerate release.
 
-21. Payment Release Safety 
+21. Deployment Coordination 
 
-Payment functionality requires additional release validation.
+Deployment is performed through the mechanisms defined by AG-11 and AG-12.
 
-The release must verify that:
+AG-13 coordinates release authorization with those mechanisms.
 
-electronic payment success remains server-authoritative provider confirmation follows AG-08 webhook validation is active idempotency is preserved duplicate charges are prevented duplicate webhook effects are prevented payment state remains auditable reconciliation requirements are satisfied 
+The release sequence must preserve the distinction:
 
-Cash Transaction remains separate from electronic Payment.
+AG-11 → CI/CD execution
 
-A payment release must be blocked if client-controlled payment success can become authoritative.
+AG-12 → Production environment
 
-22. KYC Release Safety 
+AG-13 → Release authorization
 
-KYC functionality must preserve the boundaries established by AG-06, AG-07, and AG-08.
+No gate may silently assume another gate's authority.
 
-Release validation must verify:
+22. Rollback and Recovery 
 
-authorized KYC submission restricted KYC access protected document handling secure storage boundary controlled provider integration server-side approval auditability no client-side KYC approval 
+Every release with meaningful production impact must have an appropriate rollback or recovery strategy.
 
-Sensitive KYC information must not be exposed through release artifacts, logs, screenshots, test fixtures, or ordinary API responses.
+The strategy must consider:
 
-23. Location and Tracking Release Safety 
+application rollback configuration rollback database migration compatibility external integration state Android compatibility payment state financial state data integrity 
 
-Location and tracking features must preserve privacy and authorization requirements.
+Rollback must not blindly reverse irreversible financial or domain events.
 
-Release validation must consider:
+Where rollback is unsafe, controlled forward recovery must be used.
 
-permission behavior minimum necessary access secure transport authorized access retention requirements background access where applicable handling of denied/revoked permissions exposure minimization 
+23. Post-Release Verification 
 
-Tracking data must not become authoritative proof of:
+After release, the system must be checked for expected operation.
 
-service completion payment cash settlement 24. Notification Release Safety 
+Verification may include:
 
-Notification delivery must remain separate from authoritative business state.
+service health API availability authentication authorization database health critical application flows payment integration webhook processing KYC operations notifications Android connectivity monitoring and alerts 
 
-Release validation must ensure:
+Post-release verification must use safe, controlled checks.
 
-notification recipients are authorized sensitive content is minimized duplicate notifications are controlled where required failed notifications do not incorrectly mutate business state authoritative state remains retrievable from the backend 25. Rollback Requirements 
+24. Release Monitoring 
 
-Every production release must have a defined rollback or recovery strategy appropriate to the affected components.
+Production monitoring after release should pay particular attention to changes introduced by the release.
 
-Rollback planning must consider:
+Where applicable, monitor:
 
-application artifact rollback API compatibility database migration compatibility configuration changes external provider changes payment state queued/background operations notification behavior Android client compatibility 
+error rates latency authentication failures authorization failures API failures payment failures webhook failures KYC failures database health resource usage crash rates notification failures 
 
-A rollback must not create duplicate financial effects or corrupt authoritative lifecycle state.
+Unexpected critical behavior may trigger rollback or controlled recovery.
 
-Where a database change is not safely reversible, a forward-recovery strategy must be documented.
+25. Release Evidence 
 
-26. Backward Compatibility 
-
-Releases must consider currently supported clients and services.
-
-A new backend release must not unintentionally break supported Android clients.
-
-A new Android release must not assume unsupported API behavior.
-
-Breaking changes require controlled migration or versioning according to AG-05.
-
-Compatibility decisions must be documented when multiple versions coexist.
-
-27. Release Integrity 
-
-Release artifacts must be protected against unauthorized modification.
-
-Where supported by the implementation environment, release integrity should include:
-
-artifact checksums signed artifacts source revision traceability controlled artifact storage controlled release permissions immutable release records where practical 
-
-Release credentials must be protected according to AG-07 and AG-12.
-
-28. Release Approval 
-
-A release should require explicit approval after required automated and manual verification has completed.
-
-Approval must consider:
-
-architecture status testing status security status CI/CD status production readiness integration readiness compatibility rollback readiness unresolved issues release evidence 
-
-No single UI/client signal may be treated as proof of complete release readiness.
-
-29. Release Evidence 
-
-A release record should contain sufficient evidence to reconstruct why and how the release was approved.
+A release must preserve sufficient evidence to reconstruct what was released.
 
 Evidence may include:
 
-source revision artifact identifier version test results security results CI/CD results production readiness evidence migration evidence integration validation approval record release notes known limitations rollback/recovery plan 
+source revision artifact hash/identifier where supported build identifier test results security results deployment result configuration reference migration result approval record post-release verification rollback/recovery record where applicable 
 
-Evidence must not contain secrets or unnecessary sensitive personal information.
+Evidence must not contain secrets.
 
-30. Release Notes 
+26. Release Security 
 
-Each release should document meaningful changes.
+Release systems must protect:
 
-Release notes should identify, where applicable:
+signing credentials deployment credentials production secrets artifact integrity release approvals protected source branches release metadata 
 
-new functionality changed functionality fixed defects API changes database changes security changes integration changes Android changes operational changes known limitations migration requirements 
+Release credentials must never be committed to Git.
 
-Release notes must not disclose secrets or sensitive implementation information unnecessarily.
+Release access must follow least privilege.
 
-31. Incident and Hotfix Releases 
+Release actions must be attributable and auditable.
 
-Emergency releases must still preserve the essential architecture and security boundaries.
+27. Separation of Duties 
 
-A hotfix must identify:
+Where practical, release authority should remain separated from routine implementation and deployment actions.
 
-affected release reason for hotfix scope of change validation performed security impact compatibility impact deployment/rollback strategy post-release verification 
+The architecture should distinguish:
 
-Emergency status does not authorize bypassing server authority, security boundaries, or financial controls.
+implementation testing CI/CD execution production operation release authorization 
 
-Any temporarily deferred verification must be explicitly documented and resolved through the project control process.
+No single automated success signal should replace release approval.
 
-32. Release Observability 
+28. Emergency Release 
 
-After release, the system must be observable according to AG-12.
+Emergency releases may use an expedited process when required to address:
 
-Where applicable, release monitoring should cover:
+critical security issues critical production failures severe data-integrity risks critical availability incidents 
 
-application health API health authentication failures authorization failures error rates payment failures webhook failures integration failures notification failures KYC failures database health resource usage security events 
+Even emergency releases must maintain:
 
-Monitoring must not expose sensitive information.
+traceability security controls artifact identification controlled approval post-release verification evidence recording 
 
-33. Post-Release Verification 
+Emergency handling must not permanently bypass the normal architecture.
 
-A release is not considered operationally complete merely because deployment succeeded.
+29. Release Failure 
 
-Post-release verification should confirm, where applicable:
+If release verification fails:
 
-application availability API availability authentication authorization critical marketplace flows request/offer behavior service lifecycle payment processing KYC functionality messaging notifications location functionality monitoring logging external integrations 
+the release must be marked unsuccessful or blocked the failure must be recorded affected production state must be assessed rollback or recovery must be considered unresolved issues must be tracked release approval must not be inferred 
 
-Critical failures must trigger the approved incident or rollback/recovery process.
+A failed release must not silently become an approved release.
 
-34. Release Traceability 
-
-Every production release must be traceable to:
-
-source revision build artifact application version API compatibility level architecture revision configuration/environment deployment/release event verification evidence approval 
-
-This traceability must remain available for investigation and future maintenance.
-
-35. Dependency and Supply-Chain Release Safety 
-
-Release validation must consider dependencies used by the released system.
-
-Where applicable:
-
-dependency versions must be controlled unauthorized dependencies must not be introduced known critical dependency vulnerabilities must be evaluated dependency changes must remain compatible with AG-03, AG-07, AG-09, and AG-11 production artifacts must use the intended dependency set 
-
-Dependency decisions remain subject to the architecture and CI/CD gates that own them.
-
-36. Final Architecture Alignment 
-
-Before release approval, the implementation must be checked against the approved architecture.
-
-The release must not introduce unauthorized changes to:
-
-domain ownership API contracts authentication authorization security boundaries external integrations Android authority testing requirements CI/CD controls production architecture 
-
-If implementation and architecture diverge, the affected release must be blocked until the conflict is resolved.
-
-37. Final Release Checklist 
-
-The following conditions should be satisfied before production release:
-
-architecture gates are verified as required repository structure is controlled implementation matches approved architecture API contracts are compatible authentication/authorization are validated security checks are satisfied external integrations are validated Android release is validated automated testing requirements are satisfied CI/CD requirements are satisfied production readiness is confirmed database migration safety is confirmed where applicable payment safety is confirmed KYC safety is confirmed location/privacy requirements are confirmed notification behavior is confirmed rollback/recovery strategy is available release artifacts are traceable release evidence is recorded no blocking unresolved contradiction exists explicit release approval is recorded 38. Cross-Gate Consistency 
+30. Cross-Gate Consistency 
 
 AG-13 must remain consistent with:
 
-AG-02 repository structure required project files repository governance artifact organization AG-03 system boundaries dependency ownership service responsibilities AG-04 domain entities ownership lifecycle payments cash KYC location messaging notifications reviews AG-05 API contracts validation errors pagination idempotency versioning AG-06 identity authentication authorization roles ownership administrative privilege AG-07 security secrets sensitive data abuse controls logging auditability secure failure behavior AG-08 payment integrations maps notifications KYC providers secure storage webhooks retries reconciliation AG-09 Android architecture client authority boundaries session handling local storage permissions payment interaction location offline behavior AG-10 testing requirements test evidence release validation coverage AG-11 CI/CD build automation artifact generation verification gates deployment automation AG-12 production infrastructure configuration secrets monitoring backups recovery operational readiness 
+AG-03 system boundaries dependency ownership service responsibilities AG-04 data model ownership lifecycle persistence payments KYC financial state AG-05 API contract versioning validation errors idempotency AG-06 identity authentication authorization roles administrative authority AG-07 security secrets sensitive data auditability incident controls AG-08 external providers payment integrations KYC maps notifications storage webhooks AG-09 Android architecture client authority boundary authentication/session handling API compatibility payment interaction AG-10 testing architecture verification evidence release test requirements AG-11 CI/CD architecture build artifact generation automated checks deployment execution AG-12 production infrastructure runtime monitoring backup recovery production readiness 
 
 AG-13 must not introduce a contradiction with any approved architecture gate.
 
-39. Verification Criteria 
+31. Verification Criteria 
 
 AG-13 may become VERIFIED only when:
 
-its scope matches the canonical AG-13 definition AG-02 through AG-12 responsibilities are preserved release authority is clearly defined release states are controlled release candidates are traceable versioning requirements are explicit API compatibility is protected data model compatibility is protected authentication and authorization boundaries are preserved security release requirements are mapped external integrations are validated Android release requirements are mapped testing evidence requirements are mapped CI/CD evidence requirements are mapped production readiness requirements are mapped rollback/recovery requirements are defined payment release safety is preserved KYC release safety is preserved location/privacy requirements are preserved notification behavior remains non-authoritative release integrity requirements are defined release evidence is traceable post-release verification is defined no unresolved blocking contradiction exists required verification evidence is recorded 
+its scope matches the canonical AG-13 definition release authority is explicitly defined release readiness requirements are clear artifact traceability is defined source traceability is defined testing evidence requirements align with AG-10 security readiness aligns with AG-07 API compatibility aligns with AG-05 data compatibility aligns with AG-04 integration readiness aligns with AG-08 Android readiness aligns with AG-09 CI/CD boundaries align with AG-11 production readiness aligns with AG-12 rollback/recovery requirements are defined post-release verification is defined release evidence requirements are defined no unresolved blocking contradiction exists required verification evidence is recorded 
 
 READY FOR VERIFICATION does not mean VERIFIED.
 
-40. Implementation Lock 
+32. Implementation Lock 
 
-AG-13 does not authorize implementation or production release by itself.
+AG-13 does not authorize implementation.
 
-Implementation and release remain controlled by the complete architecture, verification, testing, CI/CD, production, and project-control sequence.
+Implementation remains:
 
-No production release should occur solely because AG-13 has been written.
+LOCKED
 
-41. Control Statement 
+until the complete canonical architecture sequence and final readiness conditions are satisfied.
+
+No release workflow, production release, or deployment process should be treated as authorized solely because AG-13 has been written.
+
+33. Control Statement 
 
 AG-13 establishes the final release architecture boundary for NIDDE.
 
-A release is permitted only when the approved architecture, implementation, testing, security, CI/CD, production, compatibility, and release conditions have been satisfied.
+The release process must consume evidence from the approved architecture, testing, CI/CD, and production boundaries.
 
-AG-13 does not replace or override AG-02 through AG-12.
+The authority distinction remains:
 
-The release process must preserve:
+AG-10 → Testing Architecture
 
-server authority domain ownership API contracts authentication and authorization security controls external integration boundaries Android client boundaries testing requirements CI/CD controls production requirements release traceability 
+AG-11 → CI/CD Architecture
 
-Any unresolved blocking architecture conflict must stop the affected release until the conflict is formally resolved.
+AG-12 → Production Architecture
+
+AG-13 → Release Architecture and Release Authority
+
+No CI/CD result, deployment result, application state, or client-side state may silently replace release authorization.
 
 AG-13 STATUS: READY FOR VERIFICATION
 
