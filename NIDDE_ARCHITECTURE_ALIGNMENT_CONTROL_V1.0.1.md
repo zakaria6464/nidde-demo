@@ -1,412 +1,305 @@
-# NIDDE — ARCHITECTURE ALIGNMENT CONTROL
+NIDDE — ARCHITECTURE ALIGNMENT CONTROL 
 
 Project: NIDDE
 Phase: 00 — ARCHITECTURE
-Revision: V1.0.1
-Status: ACTIVE CONTROL RECORD
-Implementation: LOCKED
+Revision: V1.1.0
+Status: READY FOR VERIFICATION
+Implementation: CONTROLLED
 
-## 1. Purpose
+1. Purpose 
 
-This document is the single alignment control record for the architecture work completed so far.
+This document defines the cross-gate alignment control for the NIDDE architecture.
 
-Its purpose is to prevent:
+Its purpose is to ensure that AG-01 through AG-13 form one coherent architecture baseline.
 
-- duplicate architecture gates
-- conflicting gate definitions
-- incorrect gate numbering
-- premature implementation
-- contradictory verification claims
-- uncontrolled changes to verified architecture
+This document does not replace any individual architecture gate.
 
-This document does not replace any Architecture Gate.
+Each gate remains responsible for its own defined scope.
 
-It does not authorize implementation.
+2. Canonical Architecture Sequence 
 
-## 2. Canonical Architecture Sequence
+The architecture sequence is:
 
-The official NIDDE architecture sequence is:
+AG-01 — Technology Stack AG-02 — Repository / System Architecture AG-03 — System Dependency Architecture AG-04 — Data Model AG-05 — API Contract Architecture AG-06 — Authentication / Authorization Architecture AG-07 — Security Model AG-08 — External Integrations Architecture AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture AG-13 — Release Architecture 
 
-AG-01 — Technology Stack
+No gate may silently redefine the responsibility of another gate.
 
-AG-02 — Repository Structure
+3. Ownership Matrix Area Primary Owner Required Compatibility Technology decisions AG-01 All gates Repository boundaries AG-02 AG-03 through AG-13 System dependencies AG-03 AG-04 through AG-13 Data model AG-04 AG-05 through AG-13 Public API AG-05 AG-06 through AG-13 Authentication / authorization AG-06 AG-07 through AG-13 Security AG-07 All gates External providers AG-08 AG-09 through AG-13 Android client AG-09 AG-10 through AG-13 Testing architecture AG-10 AG-11 through AG-13 CI/CD AG-11 AG-12 through AG-13 Production AG-12 AG-13 Release AG-13 All release-related gates 4. Authority Model 
 
-AG-03 — System / Dependency Architecture
+NIDDE uses a server-authoritative model.
 
-AG-04 — Data Model
+The Android client, administrative client, external providers, cached state, notifications, and locally stored values are not authoritative owners of protected domain state.
 
-AG-05 — API Contract
+The backend/domain boundary remains authoritative for:
 
-AG-06 — Authentication / Authorization
+identity authorization ownership roles permissions service lifecycle payment state cash settlement records KYC state administrative authority protected business decisions 5. Cross-Gate Rules AG-01 → AG-13 
 
-AG-07 — Security Model
+All implementation technology must remain compatible with the approved technology boundary.
 
-AG-08 — External Integrations
+No later gate may introduce an incompatible technology decision without controlled change.
 
-AG-09 — Android Architecture
+AG-02 → All Gates 
 
-AG-10 — Testing Architecture
+All physical files and implementation modules must remain inside approved repository boundaries.
 
-AG-11 — CI/CD Architecture
+AG-03 → All Gates 
 
-AG-12 — Production Architecture
+Dependencies must follow approved system ownership.
 
-AG-13 — Release Architecture
+No component may directly bypass an owned boundary.
 
-No document may silently renumber, merge, replace, or redefine these gates.
+AG-04 → AG-05 
 
-## 3. Gate Ownership
+API contracts must expose the approved domain model without allowing clients to become database authorities.
 
-Each gate has one primary architectural responsibility.
+AG-04 → AG-06 
 
-AG-01 owns technology selection.
+Identity, roles, ownership, and lifecycle-related data must remain consistent with authorization rules.
 
-AG-02 owns repository structure.
+AG-05 → AG-06 
 
-AG-03 owns system and dependency architecture.
+Authentication and authorization failures must be represented through controlled API behavior.
 
-AG-04 owns the logical data model.
+AG-05 → AG-08 
 
-AG-05 owns the API contract.
+External-provider operations exposed through the API must use controlled provider boundaries.
 
-AG-06 owns authentication and authorization.
+Provider-specific implementation details must not leak into the public contract unless explicitly approved.
 
-AG-07 owns the security model.
+AG-06 → AG-07 
 
-AG-08 owns external integrations.
+Authorization decisions must be protected by the security model.
 
-AG-09 owns Android architecture.
+Authentication is not authorization.
 
-AG-10 owns testing architecture.
+AG-07 → AG-08 
 
-AG-11 owns CI/CD architecture.
+External provider credentials, webhooks, sensitive data, and provider responses must satisfy security controls.
+
+AG-08 → AG-09 
+
+Android must not bypass backend-controlled external integrations for protected operations.
+
+AG-09 → AG-10 
+
+Every Android critical flow must remain testable.
+
+AG-10 → AG-11 
+
+Tests required by the architecture must be executable through the approved CI/CD pipeline.
+
+AG-11 → AG-12 
+
+CI/CD must deploy only artifacts that satisfy production requirements.
+
+AG-12 → AG-13 
+
+A release may proceed only when production-readiness requirements are satisfied.
+
+6. Data and State Alignment 
+
+The following must remain consistent across AG-04, AG-05, AG-06, AG-07, AG-08, and AG-09:
+
+User Profile Role Ownership Service Service Request Offer Service lifecycle Location Conversation Message Payment Cash transaction Review KYC Notification Audit information 
+
+No client-side representation may redefine the authoritative server model.
+
+7. Service Lifecycle Alignment 
+
+The authoritative lifecycle is:
+
+REQUESTED ↓ ACCEPTED ↓ EN_ROUTE ↓ ARRIVED ↓ IN_PROGRESS ↓ COMPLETED 
+
+Cancellation and error states remain explicitly controlled.
+
+AG-04 defines the domain lifecycle.
+
+AG-05 defines how lifecycle commands/results are represented through the API.
+
+AG-06 defines who may perform lifecycle actions.
+
+AG-07 protects lifecycle operations.
+
+AG-08 protects relevant external integrations.
+
+AG-09 presents lifecycle state.
+
+AG-10 tests lifecycle behavior.
+
+AG-11 validates lifecycle-related tests through CI/CD.
+
+AG-12 operates the production system that enforces lifecycle state.
+
+AG-13 verifies lifecycle-related release readiness.
+
+8. Payment Alignment 
+
+Electronic payment authority follows:
+
+Android / Client ↓ Approved API ↓ NIDDE Backend ↓ AG-08 Payment Integration ↓ Validated Provider Result ↓ Server Payment State 
+
+The client must never establish authoritative payment success.
+
+Payment identifiers from external providers remain external references.
+
+NIDDE's internal Payment identifier remains authoritative internally.
+
+Payment operations requiring retries must use appropriate idempotency.
+
+9. Cash Alignment 
+
+Cash settlement remains distinct from electronic payment processing.
+
+Cash-related state must be represented through the approved domain and API contracts.
+
+A client must not independently establish authoritative cash settlement.
+
+Cash records must remain auditable.
+
+10. KYC Alignment 
+
+KYC follows:
+
+Android / Admin ↓ Approved API ↓ NIDDE KYC State ↓ Approved KYC Integration ↓ Validated Provider Result ↓ Authorized NIDDE Decision 
+
+An external KYC provider does not automatically control:
+
+NIDDE roles permissions account status administrative authority 
+
+KYC remains governed by AG-06 and protected by AG-07 and AG-08.
+
+11. Location Alignment 
+
+Location data is sensitive.
+
+AG-04 defines the relevant domain data.
+
+AG-07 defines security requirements.
+
+AG-08 defines external map/routing boundaries.
+
+AG-09 defines Android permission and presentation behavior.
+
+Location information must not independently prove:
+
+payment completion service completion cash settlement 12. External Integration Alignment 
+
+External providers are untrusted dependencies.
+
+Provider-specific SDKs and APIs must remain behind controlled integration boundaries.
+
+The following principles apply:
+
+validate external responses protect provider credentials use bounded timeouts retry only when safe prevent duplicate side effects authenticate and validate webhooks protect against replay support reconciliation where required avoid leaking provider-specific implementation details prevent provider state from becoming uncontrolled domain authority 13. Android Alignment 
+
+AG-09 defines the Android boundary.
+
+Android must:
+
+consume approved APIs respect authentication and authorization display server-authoritative state use secure local storage where required handle network failures handle lifecycle interruptions avoid duplicate non-repeatable operations protect session material respect approved permissions isolate provider-specific client functionality 
+
+Android must not become an independent business-authority layer.
+
+14. Testing Alignment 
+
+AG-10 defines testing architecture.
+
+The architecture must permit validation of:
+
+domain behavior API contracts authentication authorization ownership lifecycle payments KYC external integrations Android behavior security offline behavior failure handling critical end-to-end flows 
+
+Tests must not depend on real production secrets.
+
+15. CI/CD Alignment 
+
+AG-11 must enforce the validation required by the architecture.
+
+CI/CD must be capable of:
+
+building approved artifacts executing required automated tests detecting failures validating repository rules enforcing security checks preventing unauthorized deployment preserving traceability 
+
+CI/CD must not redefine application behavior.
+
+16. Production Alignment 
 
 AG-12 owns production architecture.
 
-AG-13 owns release architecture.
+Production must preserve:
 
-A document may reference another gate but must not take ownership of that gate's responsibilities.
+security boundaries service availability requirements database integrity observability backups recovery migration safety deployment controls secret management operational access controls 
 
-## 4. Status Rules
+Production configuration must not bypass architecture gates.
 
-The following statuses have different meanings:
+17. Release Alignment 
 
-DRAFT
+AG-13 owns release readiness.
 
-The document is incomplete and is not ready for formal verification.
+Release readiness requires evidence that:
 
-READY FOR VERIFICATION
+required tests passed security requirements were satisfied critical paths were validated production requirements were satisfied deployment artifacts are controlled rollback strategy exists unresolved blocking issues do not remain 
 
-The document is prepared for formal verification but has not yet passed verification.
+A successful build alone does not constitute release readiness.
 
-VERIFIED
+18. Security Alignment 
 
-Formal verification has passed and the required evidence has been recorded.
+AG-07 is the security authority.
 
-BLOCKED
+Every gate must preserve:
 
-A blocking issue or dependency prevents verification.
+least privilege secure transport secret protection input validation output validation sensitive-data minimization authentication authorization replay protection safe error handling controlled logging auditability where required 
 
-DEPRECATED
+No lower-level implementation may weaken these requirements.
 
-The document is no longer authoritative.
+19. Repository Alignment 
 
-Uploading or committing a document to GitHub does not make it VERIFIED.
+The repository must contain:
 
-## 5. Current Architecture Baseline
+README.md NIDDE_PROJECT_CONTROL.md NIDDE_MASTER_FILE_MANIFEST_V2.0.3_FIXED-2.md NIDDE_ARCHITECTURE_ALIGNMENT_CONTROL_V1.0.1.md .env.example .gitignore CONTRIBUTING.md SECURITY.md 
 
-AG-01 and AG-02 remain the established project baseline according to the existing project records.
+along with the approved implementation and documentation boundaries.
 
-AG-03 and AG-04 must retain their existing documents and verification evidence.
+Only one active canonical architecture document may exist for each gate.
 
-AG-05, AG-06, AG-07, and AG-08 are governed by the corrected scope of the four corresponding gate documents.
+20. Duplicate and Superseded Files 
 
-AG-09 through AG-13 remain required architecture gates.
+If multiple versions of an architecture document exist:
 
-No later gate may be skipped merely because earlier documents exist.
+only one may be active older versions must be explicitly marked superseded if retained implementation must use the active canonical version duplicate active contracts are prohibited 
 
-## 6. Previously Created AG-05 Through AG-08 Material
+This rule prevents ambiguity between similarly named AG documents.
 
-The previously created five-file package is treated as preliminary architecture material.
+21. Conflict Resolution 
 
-The corrected responsibilities are:
+When a conflict is discovered:
 
-AG-05 = API Contract
+Stop the affected implementation. Identify the exact requirements that conflict. Identify the owning gate. Determine whether the conflict is real or only naming/documentation drift. Update the owning architecture document if required. Update this alignment control when the cross-gate relationship changes. Re-run the affected consistency checks. Resume implementation only after the conflict is resolved. 
 
-AG-06 = Authentication / Authorization
+No silent workaround is permitted.
 
-AG-07 = Security Model
+22. Verification Matrix Gate Alignment Requirement AG-01 Technology remains compatible with all gates AG-02 Repository boundaries remain stable AG-03 Dependency ownership remains explicit AG-04 Domain model remains authoritative AG-05 API remains the approved application boundary AG-06 Identity and authorization remain server-controlled AG-07 Security controls apply across all boundaries AG-08 Providers remain isolated and untrusted AG-09 Android remains an untrusted client AG-10 Architecture remains testable AG-11 Required validation is enforceable in CI/CD AG-12 Production preserves architecture AG-13 Release requires verified readiness 23. Readiness Conditions 
 
-AG-08 = External Integrations
+The architecture baseline may proceed toward implementation only when:
 
-No additional gate is created by these corrections.
+all required gates exist each gate has one active canonical document no unresolved blocking contradiction exists repository boundaries are consistent domain ownership is consistent API boundaries are consistent authentication and authorization are consistent security requirements are consistent external integrations are isolated Android remains client-authoritative only for presentation/interaction testing requirements are mapped CI/CD requirements are mapped production requirements are mapped release requirements are mapped 24. Implementation Control 
 
-The corrected documents must be evaluated against the existing AG-03 and AG-04 architecture.
+This alignment document does not authorize unrestricted implementation.
 
-## 7. Cross-Gate Invariants
+Implementation remains controlled until the architecture and physical-file baseline are accepted.
 
-The following rules must remain consistent across the entire architecture.
+When implementation starts, every new file must have:
 
-### Identity
+a repository location an owning boundary an architectural purpose known dependencies an implementation status applicable tests 25. Final Alignment Statement 
 
-Authentication establishes identity.
+NIDDE's architecture is considered aligned only when AG-01 through AG-13 describe one coherent system without unresolved ownership, dependency, security, API, lifecycle, payment, KYC, Android, testing, CI/CD, production, or release contradictions.
 
-Authorization establishes permission.
+No implementation may silently override an approved gate.
 
-Client-provided role claims are never authoritative.
+NIDDE ARCHITECTURE ALIGNMENT CONTROL — ACTIVE
 
-### Ownership
+STATUS: READY FOR VERIFICATION
 
-Every entity has an authoritative domain owner.
+IMPLEMENTATION: CONTROLLED
 
-Cross-domain direct database writes are prohibited outside approved repository or data-access boundaries.
+ARCHITECTURE BASELINE: AG-01 → AG-13
 
-### Lifecycle
 
-The authoritative service lifecycle is:
-
-REQUESTED → ACCEPTED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED
-
-Cancellation and error states are explicit.
-
-Protected lifecycle transitions are controlled by the backend.
-
-### Payments
-
-Payment and Cash Transaction remain separate concepts.
-
-Electronic payment success must not be accepted solely from client state.
-
-Provider callbacks and webhooks must be validated.
-
-Financial operations must be attributable, auditable, and idempotent where required.
-
-### KYC
-
-KYC decisions are server-side and authorized.
-
-Sensitive KYC documents use approved secure storage or integration boundaries.
-
-### Messaging
-
-Conversation access is restricted to authorized participants.
-
-### Location
-
-Location and tracking information is sensitive and purpose-limited.
-
-Tracking data alone is not authoritative proof of payment or service completion.
-
-### Audit
-
-Lifecycle, financial, KYC, administrative, and security-sensitive operations must remain traceable.
-
-### External Systems
-
-External providers are untrusted dependencies and must be isolated behind controlled integration boundaries.
-
-### Secrets
-
-Real secrets must never be committed to Git.
-
-## 8. Dependency Rules
-
-A gate may be verified only when its required blocking dependencies are satisfied.
-
-The following rules apply:
-
-1. Every dependency must reference an existing gate or approved project-control document.
-2. Unknown dependencies are prohibited.
-3. A VERIFIED gate must not depend on an unresolved blocking contradiction.
-4. A deprecated or blocked document cannot silently satisfy a dependency.
-5. Dependency changes require impact review.
-6. Circular blocking dependencies are prohibited.
-7. A gate cannot self-certify its own verification merely by declaring VERIFIED.
-
-## 9. Verification Procedure
-
-Each gate must pass the following process:
-
-1. Confirm the gate number and scope.
-2. Confirm its required dependencies.
-3. Compare it against preceding architecture decisions.
-4. Check data ownership.
-5. Check lifecycle consistency.
-6. Check authentication and authorization consistency.
-7. Check security consistency.
-8. Check external integration boundaries.
-9. Identify contradictions.
-10. Resolve all blocking contradictions.
-11. Record verification evidence.
-12. Only then mark the gate VERIFIED.
-
-## 10. Physical File Inventory
-
-Architecture completion must not be confused with physical implementation-file creation.
-
-The physical implementation-file inventory remains:
-
-NOT YET CALCULATED
-
-It must be generated only after the complete architecture sequence has been verified.
-
-No preliminary physical-file count may be treated as the final implementation inventory.
-
-## 11. Implementation Lock
-
-Implementation remains LOCKED until all of the following conditions are satisfied:
-
-- AG-01 VERIFIED
-- AG-02 VERIFIED
-- AG-03 VERIFIED
-- AG-04 VERIFIED
-- AG-05 VERIFIED
-- AG-06 VERIFIED
-- AG-07 VERIFIED
-- AG-08 VERIFIED
-- AG-09 VERIFIED
-- AG-10 VERIFIED
-- AG-11 VERIFIED
-- AG-12 VERIFIED
-- AG-13 VERIFIED
-- dependency consistency verified
-- cross-gate contradictions resolved
-- physical-file inventory generated
-- physical-file inventory approved
-- final implementation readiness recorded
-
-This document cannot unlock implementation by itself.
-
-## 12. Required Completion Path
-
-The controlled completion path is:
-
-AG-03 verification
-
-→ AG-04 verification
-
-→ AG-05 verification
-
-→ AG-06 verification
-
-→ AG-07 verification
-
-→ AG-08 verification
-
-→ AG-09 Android Architecture
-
-→ AG-10 Testing Architecture
-
-→ AG-11 CI/CD Architecture
-
-→ AG-12 Production Architecture
-
-→ AG-13 Release Architecture
-
-→ Cross-Gate Consistency Audit
-
-→ Physical File Inventory
-
-→ Final Implementation Readiness
-
-→ Phase 01 Implementation
-
-No step is automatically considered complete merely because its document exists.
-
-## 13. Prohibited Shortcuts
-
-The project must not:
-
-- treat an uploaded file as automatically verified
-- start implementation before the architecture lock is released
-- use one generic document to replace AG-09 through AG-13
-- redefine AG-08 as deployment architecture
-- redefine AG-07 as authentication architecture
-- redefine AG-06 as the complete security model
-- redefine AG-05 as the complete system architecture
-- allow client-controlled payment success
-- allow client-controlled KYC approval
-- allow client-controlled protected lifecycle state
-- trust client role claims
-- bypass domain ownership
-- commit real secrets to Git
-- silently change a verified architecture contract
-
-## 14. Conflict Resolution
-
-If two architecture documents contradict each other:
-
-1. Stop implementation of the affected area.
-2. Identify the conflicting gate responsibilities.
-3. Determine which gate owns the disputed decision.
-4. Preserve the authoritative decision of the owning gate.
-5. Update the dependent document.
-6. Record the correction.
-7. Re-run verification for affected gates.
-
-A contradiction must never be hidden by creating another duplicate document.
-
-## 15. Change Control
-
-A change to a verified architecture decision requires:
-
-- identified reason
-- affected gate
-- impact assessment
-- updated revision
-- dependency review
-- verification of affected gates
-
-A new filename must not be created merely to hide an unresolved contradiction.
-
-## 16. Relationship With Existing Project Control
-
-This document supplements the existing:
-
-- NIDDE Project Control
-- Master File Manifest
-- AG-02 Repository Structure
-- AG-03 System / Dependency Architecture
-- AG-04 Data Model
-
-It does not replace those documents.
-
-If a conflict exists, the project control process must determine the authoritative correction before implementation.
-
-## 17. Final Control Decision
-
-The architecture is currently controlled but implementation remains locked.
-
-The current state is:
-
-ARCHITECTURE = CONTROLLED
-
-IMPLEMENTATION = LOCKED
-
-PHYSICAL FILE COUNT = NOT YET CALCULATED
-
-NEXT WORK = FORMAL VERIFICATION AND COMPLETION OF AG-03 THROUGH AG-13
-
-## 18. Approval
-
-Reviewer: ______________________________
-
-Date: __________________________________
-
-Decision:
-
-[ ] APPROVED
-
-[ ] APPROVED WITH NON-BLOCKING NOTES
-
-[ ] CHANGES REQUIRED
-
-[ ] BLOCKED
-
-Notes:
-
-____________________________________________________
-
-____________________________________________________
-
-____________________________________________________
