@@ -1,547 +1,304 @@
-# NIDDE — MASTER FILE MANIFEST V2.0.3
-
-> **STATUS: PHASE 00 / ARCHITECTURE — FILE COUNT NOT YET LOCKED**
->
-> This document is the planning authority for the NIDDE rebuild. It deliberately does **not** guess the final physical-file count. Exact file records are created only after the architecture gates below are approved.
-
-## 1. Project Identity
-
-| Field | Value |
-|---|---|
-| Project | NIDDE |
-| Repository | NIDDE |
-| Mode | STRICT |
-| Current Phase | 00 — ARCHITECTURE |
-| Canonical Manifest Path | `/NIDDE_MASTER_FILE_MANIFEST.md` |
-| Manifest Version | V2.0.3 |
-| GitHub Application Upload | LOCKED |
-| Application Files Uploaded | 0 |
-| Verified Files | 0 |
-| Blocked Files | 0 |
-| Patched Files | 0 |
-| Total Planned Physical Files | NOT YET CALCULATED |
-| Final Physical-File Count | NOT LOCKED |
-| Last Verified File | AG-01 — TECHNOLOGY STACK |
-| Next File | NOT YET CREATED |
-
-## 2. Authority and Source-of-Truth Rules
-
-1. During planning, this Manifest defines the approved file plan.
-2. After an implementation file is verified and committed, GitHub is the authoritative source for that implementation file.
-3. `NIDDE_PROJECT_CONTROL.md` is the authoritative project-status register.
-4. The Manifest is the authoritative file/dependency register.
-5. Conversation messages, old ZIPs, phone copies, and historical generated files are **not** sources of project state.
-6. No application file may be uploaded merely because it exists locally or appears to work.
-7. No file may be silently added, removed, renamed, or moved after the manifest is locked.
-8. Any post-lock change requires a Change Request.
+NIDDE — MASTER FILE MANIFEST 
 
-## 3. Canonical Naming Rule
+Project: NIDDE
+Phase: 00 — ARCHITECTURE / REPOSITORY BASELINE
+Manifest Revision: V2.1.0
+Status: READY FOR VERIFICATION
+Implementation: CONTROLLED
+Authority: Repository File and Boundary Control
 
-The canonical repository file is:
+1. Purpose 
 
-`/NIDDE_MASTER_FILE_MANIFEST.md`
+This document defines the canonical repository file manifest for NIDDE.
 
-Versioned exported copies such as `NIDDE_MASTER_FILE_MANIFEST_V2.0.0.md` are historical/export artifacts and are **not** additional project files unless explicitly registered through a Change Request.
+It establishes:
 
-The Manifest ID assigned to the canonical manifest is reserved for the manifest itself once the exact physical-file inventory is locked.
+approved repository boundaries canonical architecture-document locations required control files implementation directories testing boundaries infrastructure boundaries GitHub configuration boundaries file naming rules forbidden repository content physical-file inventory requirements 
 
-## 4. Mandatory Physical-File Record
+This manifest does not implement application behavior.
 
-Every exact physical file in the locked manifest MUST have all fields below.
+2. Manifest Authority 
 
-| Field | Requirement |
-|---|---|
-| ID | Immutable `NIDDE-XXX` identifier |
-| Name | Exact physical filename |
-| Path | Exact repository path |
-| Type | Exact file format/language |
-| Phase | Owning NIDDE phase |
-| Domain | Owning system domain |
-| Purpose | Single primary responsibility |
-| Inputs | Direct inputs, contracts, environment/config references |
-| Outputs | Direct outputs, artifacts, side effects |
-| DEPENDS_ON | Direct prerequisite Manifest IDs only |
-| USED_BY | Direct consumer Manifest IDs only |
-| Test Method | Exact validation/acceptance method |
-| Acceptance Criteria | Conditions required for VERIFIED |
-| Verification Evidence | Test/report/command/evidence reference |
-| Status | Controlled lifecycle state |
-| Commit | Exact Git commit reference after verification |
-| Patch History | Patch IDs and outcomes |
-| Change Request | CR ID when created/changed by a CR |
-| Notes | Constraints, architecture decisions, exceptions |
+This manifest is the canonical reference for the planned repository structure.
 
-**No exact physical-file record is complete if any mandatory field is unknown.**
+It must remain consistent with:
 
-## 5. Controlled Status Lifecycle
+NIDDE_PROJECT_CONTROL.md AG-01 through AG-13 architecture documents repository state approved implementation decisions 
 
-Allowed statuses:
+If an implementation file is required but is not represented by the approved repository structure, the implementation must stop until the manifest is updated or the file is explicitly classified as an allowed implementation artifact.
 
-- `PLANNED`
-- `BUILDING`
-- `TESTING`
-- `VERIFIED`
-- `BLOCKED`
-- `PATCHED`
-- `DEPRECATED`
+3. Canonical Root 
 
-Rules:
+The repository root is:
 
-- `PLANNED`: approved in the manifest but not yet implemented.
-- `BUILDING`: implementation is in progress.
-- `TESTING`: implementation exists and is undergoing required checks.
-- `VERIFIED`: all applicable required checks passed and evidence is recorded.
-- `BLOCKED`: at least one required gate failed; dependent work is stopped.
-- `PATCHED`: an existing file was changed after verification and must pass the applicable re-verification gates before it can return to `VERIFIED`.
-- `DEPRECATED`: removed from active architecture; active files may not depend on it.
+NIDDE/ 
 
-A file cannot be `VERIFIED` when a required dependency is missing, `BLOCKED`, `DEPRECATED`, or otherwise unverified.
+The repository must not introduce unrelated top-level directories.
 
-## 6. Mandatory Verification Pipeline
+4. Required Root Files 
 
-Every implementation file follows:
+The following root files are approved:
 
-`PLAN → BUILD → STATIC CHECK → DEPENDENCY CHECK → INTEGRATION CHECK → TEST → VERIFY → COMMIT → GITHUB → REGISTER`
+README.md NIDDE_PROJECT_CONTROL.md NIDDE_MASTER_FILE_MANIFEST_V2.0.3_FIXED-2.md NIDDE_ARCHITECTURE_ALIGNMENT_CONTROL_V1.0.1.md .env.example .gitignore CONTRIBUTING.md SECURITY.md 
 
-Not every file requires identical runtime checks, but every file must have an explicit applicable test/verification method.
+A future canonical rename of the manifest must be performed through controlled change management rather than by silently creating competing manifest files.
 
-If a required check fails:
+5. Architecture Documentation 
 
-`BLOCKED`
+Architecture documents belong to the repository documentation/control layer.
 
-Recovery sequence:
+Canonical architecture gates are:
 
-`ROOT CAUSE → FIX/PATCH → STATIC CHECK → DEPENDENCY CHECK → INTEGRATION CHECK → TEST → VERIFY → COMMIT → REGISTER`
+AG-01 — Technology Stack AG-02 — Repository / System Architecture AG-03 — System Dependency Architecture AG-04 — Data Model AG-05 — API Contract Architecture AG-06 — Authentication / Authorization Architecture AG-07 — Security Model AG-08 — External Integrations Architecture AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture AG-13 — Release Architecture 
 
-## 7. File Identity Rules
+Each gate must have one canonical active document.
 
-1. IDs are immutable once assigned.
-2. IDs are never silently reused.
-3. A physical path belongs to one active file ID only.
-4. A file ID cannot silently change its physical path.
-5. Renaming or moving a file requires a Change Request and dependency impact analysis.
-6. Generated/build/cache artifacts are not counted as source files unless explicitly required by the architecture.
-7. Directories are not files and do not count toward `TOTAL PLANNED`.
-8. Wildcards (`*`) and placeholders (`...`) are forbidden inside the final locked physical-file table.
+Duplicate active versions of the same gate must not coexist.
 
-## 8. Architecture Gates — Phase 00
+Historical or superseded documents must be clearly identified as archived or superseded if retained.
 
-The final physical-file inventory MUST NOT be calculated by guessing.
+6. Repository Boundaries 
 
-The following gates must be explicitly resolved before the file count is locked:
+Approved implementation boundaries:
 
-### AG-01 — Technology Stack
+backend/ database/ shared/ android/ admin/ tests/ docs/ infrastructure/ 
 
-Lock languages, runtimes, frameworks, package managers, database technology, Android stack, and required build/package tooling. Exact compatible dependency/tool versions are locked through the Compatibility/Implementation Gates before the physical-file inventory is locked.
+Approved GitHub configuration boundary:
 
-### AG-02 — Repository Structure
+.github/ 7. Backend Boundary backend/ 
 
-Lock top-level directories, module boundaries, naming conventions, configuration locations, test locations, documentation locations, and infrastructure boundaries.
+Owns server-side implementation.
 
-### AG-03 — System Architecture
+Expected responsibilities include:
 
-Lock domain boundaries, application layers, service boundaries, data flow, ownership, interfaces, and runtime responsibilities.
+API implementation application services domain services authorization enforcement lifecycle enforcement payment state handling KYC state handling messaging authorization notification coordination business validation integration orchestration 
 
-### AG-04 — Data Model
+Backend implementation must follow AG-03 through AG-08.
 
-Lock entities, fields, relations, constraints, indexes, lifecycle fields, audit fields, migration strategy, and seed strategy.
+8. Database Boundary database/ 
 
-### AG-05 — API Contract
+Owns database-specific implementation artifacts.
 
-Lock endpoints/interfaces, authentication requirements, request/response contracts, errors, pagination, idempotency, versioning, and webhook contracts.
+Potential contents include:
 
-### AG-06 — Authentication / Authorization
+database/ ├── migrations/ ├── seeds/ └── schema/ 
 
-Lock identity flows, sessions/tokens, roles, permissions, account recovery, verification requirements, guards, and privilege boundaries.
+Database artifacts must remain consistent with AG-04.
 
-### AG-07 — Security Model
+The database must not silently redefine domain ownership or API behavior.
 
-Lock secrets handling, validation, rate limiting, authorization enforcement, audit requirements, data protection, logging rules, and security testing.
+9. Shared Boundary shared/ 
 
-### AG-08 — External Integrations
+Contains only artifacts that are genuinely shared between approved application boundaries.
 
-Lock maps/geocoding, payment providers, push notifications, email/SMS if required, storage, identity/KYC providers, and failure/retry behavior.
+Examples may include:
 
-### AG-09 — Android Architecture
+shared contract definitions generated API contract models where approved shared validation schemas where explicitly authorized 
 
-Lock Android language/framework, package structure, modules, navigation, state management, networking, storage, permissions, notifications, location, payment integration, and test structure.
+Provider-specific implementation and backend-private logic must not be moved into shared/ merely for convenience.
 
-### AG-10 — Testing Architecture
+10. Android Boundary android/ 
 
-Lock unit, integration, API, database, authentication, payment, security, critical-path, Android, and end-to-end strategy.
+Owns Android implementation.
 
-### AG-11 — CI/CD Architecture
+Expected responsibilities include:
 
-Lock workflow boundaries, validation order, build checks, security checks, artifact handling, branch/commit rules, and deployment gates.
+Android application source UI navigation state management API client local persistence secure session handling permissions location presentation notifications approved payment interaction Android-specific testing 
 
-### AG-12 — Production Architecture
+Android remains an untrusted client.
 
-Lock deployment topology, environments, database production setup, monitoring, logging, backup, recovery, migrations, rollback, and operational access.
+AG-09 controls the Android architecture.
 
-### AG-13 — Release Architecture
+11. Admin Boundary admin/ 
 
-Lock release checklist, versioning, final audit, acceptance criteria, rollback criteria, and production-readiness definition.
+Owns approved administrative interface implementation.
 
-**Only after AG-01 through AG-13 pass may the exact physical-file inventory be generated and counted. AG-01 does not require every dependency version to be frozen; it requires the technology families and package/build tooling to be unambiguous. Exact versions are frozen by the relevant compatibility/implementation gates before physical-file lock.**
+Administrative privileges remain backend-authorized.
 
-## 9. Required Domain Coverage
+The presence of an admin UI must never be interpreted as proof of administrative authority.
 
-Architecture analysis must explicitly cover:
+12. Testing Boundary tests/ 
 
-1. Backend
-2. Database
-3. Authentication
-4. Client
-5. Artisan
-6. Company
-7. Services / Marketplace
-8. Requests
-9. Offers
-10. Service Lifecycle
-11. Messaging
-12. Location / Maps / Tracking
-13. Payments
-14. Cash
-15. Reviews
-16. KYC
-17. Notifications
-18. Admin
-19. Analytics / Reporting
-20. Security
-21. Audit / Logs
-22. Android
-23. Testing
-24. CI/CD
-25. Production Infrastructure
-26. Release / Final Audit
+Owns repository-level testing assets.
 
-A domain is not considered complete because a directory exists. Its components, interfaces, dependencies, permissions, failure modes, and tests must be mapped.
+Testing must remain compatible with AG-10.
 
-## 10. Service Lifecycle Gate
+Tests may include:
 
-The service lifecycle must explicitly model and test at least:
+unit tests integration tests contract tests security tests failure simulations end-to-end tests repository validation tests 
 
-`REQUESTED → ACCEPTED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED`
+Tests must not require production credentials during ordinary automated execution.
 
-and valid cancellation/error transitions, including who may trigger them, what conditions apply, and what financial/notification/audit effects result.
+13. Documentation Boundary docs/ 
 
-No lifecycle implementation is considered complete without state-transition validation.
+Owns:
 
-## 11. Critical Path Gate
+architecture evidence verification reports architecture decisions implementation notes operational documentation controlled project documentation 
 
-Before Production Ready, these end-to-end flows must pass.
+Documentation must not silently become a second source of architectural authority.
 
-### Client
+14. Infrastructure Boundary infrastructure/ 
 
-`Registration → Login → Search → Request → Receive Offers → Select → Service → Payment → Review`
+Owns production and infrastructure implementation artifacts.
 
-### Artisan
+Potential responsibilities include:
 
-`Registration → KYC → Approval → Online → Receive Request → Offer → Accept → Execute → Complete → Payout`
+deployment configuration infrastructure definitions environment orchestration monitoring configuration backup/recovery configuration operational tooling production validation 
 
-### Admin
+Infrastructure remains governed by AG-12.
 
-`Login → User Management → Orders → KYC → Payments → Complaints/Moderation → Logs → Analytics`
+15. GitHub Boundary .github/ 
 
-Any critical-path failure means:
+Reserved for GitHub-native repository configuration.
 
-`PRODUCTION READY = FALSE`
+Approved workflow location:
 
-## 12. Dependency Rules
+.github/workflows/ 
 
-`DEPENDS_ON` contains **direct prerequisites only**.
+CI/CD implementation must follow AG-11.
 
-`USED_BY` contains **direct consumers only**.
+Application runtime source code must not be placed inside .github/.
 
-Rules:
+16. Environment Configuration 
 
-1. Every referenced ID must exist in the manifest.
-2. No dependency may reference an unknown ID.
-3. No active file may depend on `BLOCKED`.
-4. No active file may depend on `DEPRECATED`.
-5. A file must not be marked `VERIFIED` if any required dependency is unverified.
-6. Dependency changes require impact analysis.
-7. Dependency cycles are forbidden unless explicitly justified by an architecture decision and verified as safe.
-8. The dependency graph must be internally consistent: every `DEPENDS_ON` relationship must have the corresponding direct `USED_BY` relationship.
+The repository may contain:
 
-## 13. Phase Dependency Rule
+.env.example 
 
-A file may depend on a file from an earlier phase, the same phase, or an explicitly approved later-phase interface only when the architecture requires it.
+This file may contain:
 
-Implementation order is determined by the dependency graph, not by ID number alone.
+variable names safe placeholders documentation comments 
 
-`NIDDE-XXX` numbering is an identity system, **not a guarantee of build order**.
+It must not contain:
 
-The next executable item is the first unverified item whose required dependencies are all satisfied.
+real credentials production secrets private keys payment secrets provider secrets real database credentials 
 
-## 14. Phase Integration Gate
+Real environment files remain outside the repository.
 
-Every NIDDE phase must have an integration acceptance check before the phase is marked `VERIFIED`.
+17. Git Ignore Requirements 
 
-A phase is:
+.gitignore must protect against accidental inclusion of:
 
-- `VERIFIED` only when its required files pass and its phase integration test passes.
-- `BLOCKED` when any required file or phase integration test fails.
+local environment files secrets build outputs IDE files generated local artifacts caches temporary files signing material 
 
-Phase verification must be recorded in `NIDDE_PROJECT_CONTROL.md` and linked to evidence.
+The exact .gitignore content must remain compatible with AG-07 and AG-11.
 
-## 15. Security and Secrets Gate
+18. Security Restrictions 
 
-Never commit:
+The following are forbidden in the repository:
 
-- passwords
-- API keys
-- tokens
-- private keys
-- production credentials
-- sensitive production configuration
+Production credentials Private keys Payment secrets Webhook secrets Provider secret keys Real authentication secrets KYC identity documents Sensitive production exports Unapproved personal data dumps Production database dumps 
 
-Use templates such as:
+Security requirements are controlled by AG-07.
 
-`/.env.example`
+19. Duplicate Gate Protection 
 
-Real secrets must remain in an approved secure environment.
+Only one active canonical document may represent each architecture gate.
 
-Every GitHub registration must include a secret/sensitive-data scan.
+For example, the repository must not contain two active AG-08 architecture contracts.
 
-## 16. Commit Rules
+If an older document is retained:
 
-Verified implementation commit:
+STATUS: SUPERSEDED 
 
-`NIDDE-[ID] | [NAME] | VERIFIED`
+must be clearly indicated.
 
-Patch commit:
+The active document must be unambiguous.
 
-`NIDDE-[ID]-P## | [PATCH NAME] | VERIFIED`
+20. Naming Rules 
 
-The exact commit reference/hash MUST be recorded after successful verification.
+Architecture documents should follow the pattern:
 
-A GitHub commit does not itself prove that verification succeeded.
+NIDDE_AG-XX_<DESCRIPTIVE_NAME>_V<MAJOR>.<MINOR>.<PATCH>.md 
 
-## 17. GitHub Registration Gate
+Verification reports should use an explicitly distinguishable name.
 
-After verification and commit, the following must be checked:
+Repository control documents must not be confused with implementation source files.
 
-1. File exists.
-2. Exact path is correct.
-3. Exact filename is correct.
-4. Expected content is present.
-5. Commit is present.
-6. Required dependencies are present and valid.
-7. No forbidden secrets are present.
-8. Manifest record is updated.
-9. `NIDDE_PROJECT_CONTROL.md` is updated.
+File names must remain stable after implementation begins unless a controlled change is recorded.
 
-Only then is the file considered registered.
+21. Physical File Inventory 
 
-## 18. Patch Rules
+Before large-scale implementation begins, the repository must undergo a physical-file inventory.
 
-Every patch must record:
+The inventory must record:
 
-- Patch ID
-- File ID
-- Problem
-- Root Cause
-- Fix
-- Tests run
-- Test results
-- Verification result
-- Commit
-- Date/reference
+path filename file type owner boundary architecture gate dependency role implementation status verification status whether the file is required, generated, or optional 
 
-A patched file is never assumed to remain verified. Applicable verification must be rerun.
+The inventory must be generated from the actual repository state.
 
-## 19. Change Request Rules
+It must not be based only on assumptions or planned filenames.
 
-Any requirement discovered after manifest lock follows:
+22. Dependency Ownership 
 
-`CHANGE REQUEST → IMPACT ANALYSIS → APPROVAL → MANIFEST UPDATE → BUILD → VERIFY`
+Every implementation file must have a clear ownership boundary.
 
-A Change Request must identify:
+Dependencies must not create unauthorized coupling between:
 
-- CR ID
-- Reason
-- Affected files
-- Affected dependencies
-- Affected phases
-- Security impact
-- Testing impact
-- Production impact
-- Count impact
-- Approval/status
+Android and database internals UI and provider SDK business logic client and administrative internals backend and Android private implementation application code and infrastructure secrets 
 
-No random file creation.
-No silent dependency changes.
-No silent architecture changes.
+Cross-boundary dependencies must be explicitly justified.
 
-## 20. Definition of Done — File
+23. Source-of-Truth Rules 
 
-A file is DONE only when:
+When documents appear to conflict, resolve them in this order:
 
-- exact path/name/type are correct;
-- syntax/static checks pass where applicable;
-- all dependencies resolve;
-- security checks pass;
-- integration checks pass where applicable;
-- tests pass;
-- runtime checks pass where applicable;
-- regression checks pass where applicable;
-- evidence is recorded;
-- commit is recorded;
-- GitHub registration is verified;
-- Manifest and Control are updated.
+1. Canonical Master File Manifest 2. NIDDE_PROJECT_CONTROL.md 3. Verified architecture gates 4. Repository implementation state 5. Unverified drafts / historical copies 
 
-## 21. Definition of Done — Phase
+A lower-priority artifact must not silently override a higher-priority control document.
 
-A phase is DONE only when:
+24. Implementation Readiness 
 
-- all required files are verified;
-- all dependency relationships are valid;
-- phase integration tests pass;
-- no required file is blocked;
-- regression checks pass;
-- phase evidence is recorded;
-- `NIDDE_PROJECT_CONTROL.md` is updated.
+The manifest does not authorize unrestricted implementation.
 
-## 22. Definition of Production Ready
+Before implementation proceeds, the following must be confirmed:
 
-NIDDE is not Production Ready merely because an application opens.
+architecture gates are consistent repository structure is consistent active gate documents are unique required control files exist forbidden files are absent physical-file inventory is complete dependency ownership is understood security restrictions are enforced implementation sequence is approved 25. Change Control 
 
-Production Ready requires, at minimum:
+Changes to this manifest require explicit review when they affect:
 
-- Backend operational
-- Database operational
-- Authentication operational
-- Client operational
-- Artisan operational
-- Company operational
-- Admin operational
-- Requests operational
-- Offers operational
-- Service lifecycle operational
-- Messaging operational
-- Location operational
-- Tracking operational
-- Electronic payments operational where approved
-- Cash flow operational
-- Reviews operational
-- KYC operational
-- Notifications operational
-- Analytics operational
-- Security controls operational
-- Audit/logging operational
-- Android integrated with backend
-- Critical tests passing
-- Production infrastructure ready
-- Backup/recovery verified
-- Final audit passed
-- Release gates passed
+repository boundaries architecture-document identity canonical file names implementation ownership dependency ownership security boundaries testing boundaries CI/CD boundaries production boundaries release boundaries 
 
-## 23. Recovery After Interruption
+Do not create a second manifest to bypass a conflict.
 
-When work resumes after a conversation interruption:
+Update the canonical manifest through controlled change.
 
-1. Read `NIDDE_PROJECT_CONTROL.md`.
-2. Read this Manifest.
-3. Inspect GitHub.
-4. Determine the last verified file from recorded evidence.
-5. Determine the first unverified file whose dependencies are satisfied.
-6. Confirm no dependency or Change Request invalidates the next item.
-7. Continue from that point.
+26. Repository Readiness Checklist 
 
-Never infer progress from conversation memory alone.
+Before implementation:
 
-## 24. Locked Physical-File Table
+[ ] Root control files verified [ ] Active architecture documents identified [ ] Duplicate active gates removed or marked superseded [ ] .env.example contains no real secrets [ ] .gitignore is present [ ] No production credentials are committed [ ] Repository boundaries match this manifest [ ] Physical-file inventory completed [ ] Dependency ownership reviewed [ ] Cross-gate consistency reviewed [ ] Implementation authorization confirmed 27. Implementation Sequence 
 
-**INTENTIONALLY EMPTY UNTIL THE ARCHITECTURE LOCK IS COMPLETE.**
+The repository implementation should proceed in controlled stages:
 
-The exact physical-file table is generated only after Architecture Gates AG-01 through AG-13 pass.
+Architecture Baseline ↓ Physical File Inventory ↓ Dependency Graph ↓ Backend Foundation ↓ Database Foundation ↓ Authentication / Authorization ↓ Marketplace Foundation ↓ Requests / Offers ↓ Service Lifecycle ↓ Messaging ↓ Location / Tracking ↓ Payments / Cash ↓ KYC ↓ Notifications ↓ Reviews ↓ Administration ↓ Android Integration ↓ Testing ↓ CI/CD ↓ Production ↓ Release 
 
-Wildcards, directory placeholders, and guessed file lists are not allowed here.
+Each stage must satisfy its relevant architecture gate.
 
-| ID | Name | Path | Type | Phase | Domain | Purpose | Inputs | Outputs | DEPENDS_ON | USED_BY | Test Method | Acceptance Criteria | Verification Evidence | Status | Commit | Patch History | Change Request | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+28. Final Manifest Rule 
 
-## 25. Count Lock Rule
+This manifest controls repository structure and file identity.
 
-`TOTAL PLANNED` means the number of **exact physical-file records** in Section 24 after the architecture is locked.
+It does not override:
 
-The following do NOT count as physical files:
+domain authority API contracts security requirements authentication rules external integration requirements Android architecture testing requirements CI/CD requirements production requirements release requirements 
 
-- directories;
-- wildcard groups;
-- `*` placeholders;
-- `...` placeholders;
-- conceptual modules;
-- runtime-generated temporary files;
-- build caches;
-- unregistered artifacts.
+Those responsibilities remain owned by their respective architecture gates.
 
-Therefore, in V2.0.3:
+29. Control Statement 
 
-- `TOTAL PLANNED = NOT YET CALCULATED`
-- `FINAL PHYSICAL FILE COUNT = NOT LOCKED`
-- `VERIFIED IMPLEMENTATION FILES = 0`
-- `VERIFIED ARCHITECTURE GATES = 1`
-- `BLOCKED = 0`
-- `GITHUB APPLICATION UPLOAD = LOCKED`
+NIDDE must maintain one coherent repository structure with one active canonical document per architecture gate.
 
-## 26. Cross-Document Consistency Rules
+Implementation files must be physically present, correctly owned, and traceable to the approved architecture.
 
-The following three control documents must agree at all times:
-- this Manifest;
-- `NIDDE_PROJECT_CONTROL.md`;
-- the active Architecture Gate document.
+No duplicate active architecture contract, undocumented repository boundary, secret-bearing file, or silent architecture workaround is permitted.
 
-At the current point in Phase 00 they MUST state:
-- `CURRENT_PHASE = 00 — ARCHITECTURE`;
-- `CURRENT_GATE = AG-01 — TECHNOLOGY STACK`;
-- `AG-01 STATUS = VERIFIED`;
-- `LAST VERIFIED FILE = AG-01 — TECHNOLOGY STACK`;
-- `TOTAL PLANNED PHYSICAL FILES = NOT YET CALCULATED`;
-- `GITHUB APPLICATION UPLOAD = LOCKED`.
+NIDDE MASTER FILE MANIFEST — ACTIVE
 
-`NEXT ACTION` is a control action, not a File ID, while the physical-file `NEXT FILE` remains `NOT YET CREATED` until the exact inventory is locked.
+MANIFEST STATUS: READY FOR VERIFICATION
 
-## 27. Manifest Self-Audit Checklist
+IMPLEMENTATION: CONTROLLED
 
-Before this Manifest can become the locked physical-file manifest, verify:
+ARCHITECTURE BASELINE: AG-01 → AG-13
 
-- [ ] Canonical filename/path is unique.
-- [ ] Technology stack is locked.
-- [ ] Repository structure is locked.
-- [ ] All required domains are covered.
-- [ ] Exact physical files are enumerated.
-- [ ] Every file has a unique ID.
-- [ ] Every path is unique for active files.
-- [ ] Every file has all mandatory fields.
-- [ ] No wildcard remains in the locked file table.
-- [ ] No `...` placeholder remains in the locked file table.
-- [ ] Every `DEPENDS_ON` ID exists.
-- [ ] Every `USED_BY` ID exists.
-- [ ] Dependency graph is internally consistent.
-- [ ] No unapproved dependency cycle exists.
-- [ ] Every file has an applicable test method.
-- [ ] Every VERIFIED file has evidence and a commit reference.
-- [ ] Security/secret checks are defined.
-- [ ] Phase integration checks are defined.
-- [ ] Critical paths are mapped to implementation and tests.
-- [ ] Change Request mechanism is operational.
-- [ ] Physical-file count is calculated from exact records only.
-- [ ] `NIDDE_PROJECT_CONTROL.md` agrees with this Manifest.
-- [ ] GitHub state agrees with the recorded verified files.
 
-## 28. Current Next Action
-
-`PHASE 00 → COMPLETE ARCHITECTURE GATES → ENUMERATE EXACT PHYSICAL FILES → BUILD DEPENDENCY GRAPH → DEFINE TESTS → LOCK TOTAL PLANNED → BEGIN PHASE 01`
-
-**No application code is authorized for upload while the architecture/file-count lock is incomplete.**
-
-
-## 29. Phase 00 Gate Verification Record
-
-| Gate | Result | Evidence | Implementation unlocked? |
-|---|---|---|---|
-| AG-01 — Technology Stack | VERIFIED | Official documentation cross-check dated 2026-08-18 | NO |
-
-AG-01 verification does not authorize application implementation. AG-02 is the next architecture gate.
