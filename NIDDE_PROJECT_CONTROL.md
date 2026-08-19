@@ -1,199 +1,258 @@
-# NIDDE — PROJECT CONTROL
+NIDDE — PROJECT CONTROL 
 
-**Project:** NIDDE  
-**Control Revision:** V2.0.4  
-**Phase:** 00 — ARCHITECTURE  
-**Last Updated:** 2026-08-19
+Project: NIDDE
+Control Revision: V2.1.0
+Phase: 00 — ARCHITECTURE
+Mode: STRICT
+Last Updated: 2026-08-19
 
----
+1. Purpose 
 
-## 1. Purpose
+This document is the central execution and status-control record for NIDDE.
 
-This document is the central execution and status-control record for NIDDE. It records the current architecture phase, verified gates, repository registration state, implementation lock, and the next authorized action.
+It records:
+
+current project phase architecture baseline architecture gate status repository control state implementation lock state physical-file inventory state next authorized execution step cross-document consistency requirements 
 
 The canonical Master File Manifest remains the authority for physical-file planning and dependency identity.
 
----
+2. Current Project State Control Status Project NIDDE Current Phase PHASE 00 — ARCHITECTURE Architecture Baseline AG-01 through AG-13 prepared Repository Structure ESTABLISHED Application Implementation LOCKED UNTIL FINAL BASELINE CHECK Physical-File Inventory NOT YET LOCKED Physical-File Count NOT YET CALCULATED Production Secrets in Git FORBIDDEN Application Runtime Upload LOCKED Next Execution Stage FINAL ARCHITECTURE / REPOSITORY BASELINE CHECK 3. Architecture Gate Sequence 
 
-## 2. Current Project State
+The canonical architecture sequence is:
 
-| Control | Status |
-|---|---|
-| Current Phase | PHASE 00 — ARCHITECTURE |
-| AG-01 — Technology Stack | VERIFIED |
-| AG-02 — Repository Structure | VERIFIED |
-| Application Implementation | LOCKED |
-| Physical-File Inventory | NOT YET LOCKED |
-| Physical-File Count | NOT YET CALCULATED |
-| Production Secrets in Git | FORBIDDEN |
-| Application Runtime Upload | LOCKED |
+AG-01 — TECHNOLOGY STACK ↓ AG-02 — REPOSITORY & SYSTEM ARCHITECTURE ↓ AG-03 — SYSTEM DEPENDENCY ARCHITECTURE ↓ AG-04 — DATA MODEL ↓ AG-05 — API CONTRACT ARCHITECTURE ↓ AG-06 — AUTHENTICATION & AUTHORIZATION ↓ AG-07 — SECURITY MODEL ↓ AG-08 — EXTERNAL INTEGRATIONS ↓ AG-09 — ANDROID ARCHITECTURE ↓ AG-10 — TESTING ARCHITECTURE ↓ AG-11 — CI/CD ARCHITECTURE ↓ AG-12 — PRODUCTION ARCHITECTURE ↓ AG-13 — RELEASE ARCHITECTURE 
 
-No application runtime implementation is authorized merely because repository structure documents exist.
+No later gate may silently redefine an earlier gate.
 
----
+4. Architecture Baseline 
 
-## 3. Verified Architecture Gates
+The current architecture baseline consists of the prepared AG-01 through AG-13 documents.
 
-### AG-01 — Technology Stack
+The baseline establishes:
 
-**Status:** VERIFIED
+technology boundaries repository boundaries system dependencies data model API contract authentication and authorization security requirements external integrations Android architecture testing architecture CI/CD architecture production architecture release architecture 
 
-AG-01 established the technology families and architecture baseline. Its verification record confirms that the technology stack is aligned and that implementation remains locked until the remaining architecture gates are completed.
+Each gate remains subject to its own verification status.
 
-### AG-02 — Repository Structure
+READY FOR VERIFICATION must not be interpreted as VERIFIED.
 
-**Status:** VERIFIED
+5. Repository Control 
 
-AG-02 establishes the canonical repository boundaries:
+The canonical repository root is:
 
-```text
-NIDDE/
-├── README.md
-├── NIDDE_PROJECT_CONTROL.md
-├── NIDDE_MASTER_FILE_MANIFEST.md
-├── .gitignore
-├── .env.example
-├── .github/
-│   └── workflows/
-├── backend/
-├── database/
-├── shared/
-├── android/
-├── admin/
-├── tests/
-├── docs/
-└── infrastructure/
-```
+NIDDE/ 
 
-`.github/` is reserved for GitHub-native repository configuration and workflows. `infrastructure/` owns non-GitHub-native deployment and operations infrastructure. These boundaries must not duplicate CI/CD ownership.
+Approved top-level boundaries are:
 
----
+NIDDE/ ├── README.md ├── NIDDE_PROJECT_CONTROL.md ├── NIDDE_MASTER_FILE_MANIFEST.md ├── .gitignore ├── .env.example ├── .github/ │ └── workflows/ ├── backend/ ├── database/ ├── shared/ ├── android/ ├── admin/ ├── tests/ ├── docs/ └── infrastructure/ 
 
-## 4. Repository Registration State
+No new top-level implementation boundary may be introduced without an architecture/change-control decision.
 
-The following control/document files are expected at repository root:
+6. Repository Boundary Rules backend/ 
 
-- `README.md`
-- `NIDDE_PROJECT_CONTROL.md`
-- `NIDDE_MASTER_FILE_MANIFEST.md`
-- `.gitignore`
-- `.env.example`
+Owns server-side application and domain implementation.
 
-Architecture evidence may also be stored under the repository root or `docs/` according to the approved repository structure.
+database/ 
 
-The current GitHub repository has the following architecture evidence registered during this work:
+Owns database schema artifacts, migrations, seed strategy, and database-specific implementation artifacts.
 
-- `NIDDE_AG-02_REPOSITORY_STRUCTURE_V2.0.4_VERIFIED.md`
-- `NIDDE_MASTER_FILE_MANIFEST_V2.0.3_FIXED-2.md`
+shared/ 
 
-The canonical root control filename is:
+Owns only genuinely shared contract-level or cross-client artifacts.
 
-```text
-NIDDE_PROJECT_CONTROL.md
-```
+android/ 
 
----
+Owns Android application implementation and Android-specific modules, resources, networking, local storage, permissions, location, notifications, payment interaction, and Android testing.
 
-## 5. Security Control
+admin/ 
 
-Never commit:
+Owns approved administrative application/interface artifacts.
 
-- passwords
-- API keys
-- JWT secrets
-- private keys
-- production credentials
-- real production environment files
-- sensitive production configuration
+Administrative authority remains server-controlled.
 
-`.env.example` may contain safe placeholders only. Real secrets must be supplied through an approved secure environment.
+tests/ 
 
-Every repository registration must include a sensitive-data review.
+Owns repository-level testing assets that are not exclusively owned by a single implementation module.
 
----
+docs/ 
 
-## 6. Architecture Lock
+Owns project documentation, architecture evidence, decisions, and verification documentation.
 
-The project remains in architecture-first mode.
+infrastructure/ 
 
-The exact physical-file inventory is **not yet locked**. The Master File Manifest requires the architecture gates to be completed before the final physical-file count and dependency graph are frozen.
+Owns deployment, production infrastructure, monitoring, backup/recovery, environment orchestration, and infrastructure validation.
 
-Therefore:
+.github/ 
 
-```text
-APPLICATION IMPLEMENTATION = LOCKED
-PHYSICAL FILE COUNT = NOT YET CALCULATED
-```
+Owns GitHub-native repository configuration and workflows.
 
-No arbitrary application source files are to be created at the repository root or outside the approved boundaries.
+CI/CD behavior remains governed by AG-11.
 
----
+7. Authority Model 
 
-## 7. Gate Sequence
+The backend/domain boundary remains authoritative for protected business state.
 
-The remaining architecture work proceeds through the defined gates before Phase 01 implementation begins.
+Client applications must never become authoritative for:
 
-```text
-AG-01 — Technology Stack              VERIFIED
-AG-02 — Repository Structure          VERIFIED
-AG-03 — System / Dependency Architecture   NEXT
-AG-04 — Data / Database Architecture
-AG-05 — Authentication / Authorization
-AG-06 — Domain / Service Architecture
-AG-07 — Client / Android Architecture
-AG-08 — Admin Architecture
-AG-09 — Payments / Financial Architecture
-AG-10 — Testing Architecture
-AG-11 — CI/CD Architecture
-AG-12 — Security / Operations Architecture
-AG-13 — Release / Production Architecture
-```
+roles permissions ownership administrative authority KYC approval payment success protected lifecycle state financial settlement service completion 
 
-Exact gate naming and scope remain governed by the canonical architecture documents and Master File Manifest.
+External providers are also not authoritative owners of NIDDE domain state.
 
----
+8. Security Control 
 
-## 8. Next Authorized Action
+The following must never be committed to Git:
 
-```text
-PHASE 00
-→ COMPLETE AG-03 AND REMAINING ARCHITECTURE GATES
-→ ENUMERATE EXACT PHYSICAL FILES
-→ BUILD DEPENDENCY GRAPH
-→ DEFINE TESTS
-→ LOCK TOTAL PLANNED FILE COUNT
-→ BEGIN PHASE 01
-```
+passwords API keys JWT secrets private keys payment credentials webhook secrets provider credentials database credentials production credentials real production environment files sensitive KYC documents sensitive production configuration 
 
-The next executable architecture action is **AG-03**.
+.env.example may contain variable names and safe placeholders only.
 
-No application implementation is authorized until the required architecture and physical-file controls are completed.
+Every repository implementation change must preserve the security requirements established by AG-07.
 
----
+9. Architecture Lock 
 
-## 9. Recovery Rule
+The project follows an architecture-first approach.
 
-After any interruption:
+Until the final architecture baseline and physical-file inventory are formally accepted:
 
-1. Read this Project Control document.
-2. Read the canonical Master File Manifest.
-3. Inspect the GitHub repository.
-4. Determine the last verified gate and registered evidence.
-5. Determine the first unverified architecture action whose prerequisites are satisfied.
-6. Continue from that point.
+APPLICATION IMPLEMENTATION = CONTROLLED / LOCKED PHYSICAL FILE COUNT = NOT YET LOCKED 
 
-Progress must never be inferred from conversation memory alone.
+The existence of architecture documents does not automatically authorize arbitrary application source creation.
 
----
+Implementation must begin only through the approved implementation sequence.
 
-## 10. Source-of-Truth Order
+10. Cross-Gate Consistency 
 
-When documents disagree, use this order:
+Every implementation decision must remain consistent with:
 
-1. Canonical Master File Manifest
-2. `NIDDE_PROJECT_CONTROL.md`
-3. Verified architecture-gate documents
-4. Repository state
-5. Unverified drafts or local copies
+AG-01 technology decisions AG-02 repository boundaries AG-03 system dependencies AG-04 data model AG-05 API contracts AG-06 authentication and authorization AG-07 security model AG-08 external integrations AG-09 Android architecture AG-10 testing architecture AG-11 CI/CD architecture AG-12 production architecture AG-13 release architecture 
 
-A GitHub commit alone does not prove verification. Verification status must be supported by the corresponding evidence and control records.
+If two gates appear to conflict:
+
+stop the affected implementation identify the exact conflicting requirement determine which gate owns the decision patch the appropriate architecture document update the control record resume implementation only after consistency is restored 
+
+No silent workaround is permitted.
+
+11. Critical Business Authority 
+
+The following remain server-authoritative:
+
+Identity 
+
+Authentication establishes identity.
+
+Authorization determines permitted actions.
+
+Ownership 
+
+Resource ownership is validated server-side.
+
+Lifecycle 
+
+The authoritative service lifecycle is:
+
+REQUESTED → ACCEPTED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED 
+
+Cancellation and error states are explicitly controlled.
+
+Payment 
+
+Electronic payment authority follows:
+
+Client → Approved API → NIDDE Backend → AG-08 Integration Boundary → Validated Provider Result → Server Payment State KYC 
+
+KYC approval requires authorized server-side action.
+
+Location 
+
+Location and tracking are sensitive and must not independently prove payment, service completion, or cash settlement.
+
+12. Implementation Sequence 
+
+After the architecture baseline is accepted, implementation proceeds in controlled stages:
+
+1. Repository / Physical File Baseline 2. Backend Foundation 3. Database Foundation 4. Authentication / Authorization 5. Marketplace Foundation 6. Service Requests 7. Offers 8. Service Lifecycle 9. Messaging 10. Location / Tracking 11. Payments / Cash 12. KYC 13. Notifications 14. Reviews 15. Administration 16. Android Integration 17. Full Testing 18. CI/CD Validation 19. Production Preparation 20. Release Preparation 
+
+A stage must not silently bypass requirements belonging to another gate.
+
+13. Critical Flow Protection 
+
+The following flows are considered critical:
+
+Client Registration → Login → Search → Request → Receive Offers → Select → Service → Payment → Review Artisan Registration → KYC → Approval → Online → Receive Request → Offer → Accept → Execute → Complete → Payout Company Registration → KYC → Approval → Provider Operations → Receive Request → Offer → Accept → Execute → Complete → Payout Admin 
+
+Only where an approved administrative interface exists:
+
+Login → Administrative Authentication → Authorized Management → Orders → KYC → Payments → Complaints / Moderation → Logs → Analytics 
+
+Failure of a critical path must block the affected readiness stage.
+
+14. Change Control 
+
+Any change affecting:
+
+architecture repository boundaries domain ownership API contracts authentication authorization security boundaries payment authority KYC authority lifecycle semantics external integration boundaries testing obligations CI/CD behavior production architecture release requirements 
+
+must be explicitly evaluated against the affected architecture gate.
+
+No implementation shortcut may redefine an architecture contract.
+
+15. GitHub Control 
+
+GitHub is the repository hosting and collaboration boundary.
+
+The repository must preserve:
+
+canonical filenames architecture evidence controlled commit history protected configuration boundaries secret-free repository state approved workflow locations 
+
+.github/workflows/ is reserved for GitHub-native workflow definitions.
+
+Application runtime source code must not be placed in .github/.
+
+16. Verification Language 
+
+The following statuses have distinct meanings:
+
+DRAFT 
+
+Document is under development.
+
+READY FOR VERIFICATION 
+
+Document is prepared for consistency and verification review.
+
+VERIFIED 
+
+Document has passed its required verification criteria.
+
+LOCKED 
+
+The relevant decision must not be changed without formal change control.
+
+READY FOR VERIFICATION must never be represented as VERIFIED.
+
+17. Current Authorized Action 
+
+The immediate task after establishing this control file is:
+
+FINAL ARCHITECTURE BASELINE CHECK ↓ PHYSICAL FILE INVENTORY ↓ DEPENDENCY / OWNERSHIP CHECK ↓ IMPLEMENTATION BASELINE ↓ CONTROLLED IMPLEMENTATION 
+
+No arbitrary application source files should be created before the physical-file and dependency baseline is established.
+
+18. Final Control Statement 
+
+NIDDE is controlled through architecture gates, repository boundaries, explicit ownership, server-authoritative business logic, security controls, testing requirements, CI/CD requirements, production requirements, and release requirements.
+
+The purpose of this control file is to prevent implementation drift and silent architectural contradictions.
+
+Any future implementation must preserve the approved architecture unless an explicit architecture change is made and recorded.
+
+NIDDE PROJECT CONTROL — ACTIVE
+
+MODE: STRICT
+
+APPLICATION IMPLEMENTATION: CONTROLLED
+
+ARCHITECTURE BASELINE: AG-01 → AG-13
+
+PHYSICAL-FILE INVENTORY: NOT YET LOCKED
+
