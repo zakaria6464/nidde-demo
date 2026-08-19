@@ -1,399 +1,373 @@
-NIDDE — FINAL ARCHITECTURE ALIGNMENT CONTROL 
+NIDDE — FINAL ARCHITECTURE BASELINE 
 
 Project: NIDDE
 Phase: 00 — ARCHITECTURE
-Control: FINAL ARCHITECTURE ALIGNMENT
 Revision: V1.0.0
-Status: READY FOR FINAL VERIFICATION
-Implementation: LOCKED
+Status: READY FOR VERIFICATION
+Implementation: CONTROLLED
 
 1. Purpose 
 
-This document establishes the final cross-gate compatibility control for the NIDDE architecture sequence.
+This document provides the final cross-gate architecture baseline for NIDDE.
 
-It verifies that the architecture gates from AG-02 through AG-13 operate as one consistent architecture and that later gates do not silently redefine or contradict earlier authoritative decisions.
+It consolidates the approved architectural boundaries established by AG-01 through AG-13.
 
-This document is an alignment and control contract.
+This document is a cross-gate reference.
 
-It does not implement application source code, backend code, Android code, database migrations, CI/CD workflows, infrastructure, deployment, or release operations.
+It does not replace, modify, or override any individual architecture gate.
 
-2. Authority Order 
+The individual AG documents remain authoritative for their respective responsibilities.
 
-The architecture must be interpreted according to the approved gate ownership model.
+2. Architecture Sequence 
 
-Earlier authoritative domain decisions must not be silently overridden by later implementation-oriented gates.
+The canonical architecture sequence is:
 
-The following principles apply:
+AG-01 — Technology Stack AG-02 — Repository / System Architecture AG-03 — System Dependency Architecture AG-04 — Data Model Architecture AG-05 — API Contract Architecture AG-06 — Authentication / Authorization Architecture AG-07 — Security Model AG-08 — External Integrations Architecture AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture AG-13 — Release Architecture 
 
-AG-04 remains authoritative for domain entities, ownership, lifecycle, and core data semantics. AG-05 remains authoritative for public API contract requirements. AG-06 remains authoritative for authentication and authorization architecture. AG-07 remains authoritative for security requirements. AG-08 remains authoritative for external integration boundaries. AG-09 remains authoritative for Android client architecture. AG-10 remains authoritative for testing architecture. AG-11 remains authoritative for CI/CD architecture. AG-12 remains authoritative for production architecture. AG-13 remains authoritative for release architecture. 
+No additional architecture gate is introduced by this document.
 
-No later gate may silently redefine an earlier gate's authoritative domain.
+3. Authority Model 
 
-3. Cross-Gate Compatibility 
+NIDDE follows a server-authoritative architecture.
 
-The architecture sequence must remain compatible as follows:
+The backend/domain boundary remains authoritative for protected business decisions.
 
-AG-02 → defines repository organization and structural expectations.
+The client must never become authoritative for:
 
-AG-03 → defines system and dependency boundaries.
+identity roles permissions ownership administrative authority KYC approval payment success financial settlement protected service lifecycle state service completion 
 
-AG-04 → defines the authoritative domain model, ownership, lifecycle, and data relationships.
+Client-side validation exists for usability and early feedback only.
 
-AG-05 → exposes approved domain capabilities through controlled API contracts.
+It does not replace backend validation or authorization.
 
-AG-06 → defines identity, authentication, roles, permissions, and authorization boundaries.
+4. System Boundary 
 
-AG-07 → protects identities, APIs, data, secrets, integrations, and critical operations.
+NIDDE is organized around controlled boundaries between:
 
-AG-08 → isolates external providers and prevents external systems from becoming authoritative NIDDE domain owners.
+Client Applications ↓ Approved API Boundary ↓ Backend / Domain Services ↓ Data Persistence ↓ Approved External Integrations 
 
-AG-09 → defines the Android client as an untrusted presentation and interaction layer.
+Supporting architecture includes:
 
-AG-10 → verifies the architecture and implementation behavior through controlled testing.
+Testing CI/CD Production Release Security Observability 
 
-AG-11 → automates approved build, verification, and delivery processes without redefining architecture.
+Each boundary is governed by its owning architecture gate.
 
-AG-12 → defines production operation of the approved system.
+5. Repository Authority 
 
-AG-13 → defines controlled release readiness and release execution.
+Repository structure and canonical document identity are governed by the Master File Manifest.
 
-No gate may bypass this dependency order.
+The repository must maintain:
 
-4. Backend Authority 
+one active canonical architecture document per AG explicit status for superseded documents controlled repository boundaries clear ownership of implementation files traceable dependencies protected secrets physical-file verification 
 
-The backend/domain boundary remains authoritative throughout the architecture.
+A planned file must not be treated as physically present until verified against the repository.
 
-The following values must never become authoritative solely because they are supplied or stored by a client:
+6. Domain Authority 
 
-role permission ownership administrative privilege KYC approval payment success financial settlement protected lifecycle state service completion 
+The approved NIDDE domain includes, where applicable:
 
-Android, cached data, local state, external providers, notifications, and client-submitted values cannot independently override backend authority.
+clients artisans companies administrators service requests offers service lifecycle messaging location/tracking payments cash transactions KYC notifications reviews complaints/moderation administrative operations 
 
-5. Domain Ownership 
+The authoritative domain model is governed by AG-04.
 
-AG-04 remains the authoritative source for domain ownership.
+This document does not redefine entity fields, relationships, constraints, or migrations.
 
-The API, Android client, integrations, testing systems, CI/CD systems, production systems, and release systems must consume the approved domain model rather than redefining it.
+7. API Boundary 
 
-No implementation may introduce a second authoritative owner for an existing domain entity.
+All client-to-backend communication must use approved API contracts.
 
-6. Service Lifecycle Consistency 
+AG-05 governs:
 
-The authoritative service lifecycle remains:
+endpoints request structures response structures validation errors pagination filtering versioning idempotency API compatibility 
 
-REQUESTED → ACCEPTED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED
+Clients must not bypass the API boundary to access database internals or private backend implementation details.
 
-Cancellation and error states remain explicitly modeled.
+8. Authentication and Authorization 
 
-The following rules apply across all gates:
+AG-06 governs authentication and authorization.
 
-clients may request valid operations servers determine whether transitions are permitted unauthorized transitions must be rejected arbitrary client-assigned lifecycle states are prohibited lifecycle history remains authoritative concurrent state changes must be handled safely 
+The system must distinguish:
 
-No Android, API, test, CI/CD, production, or release mechanism may redefine this lifecycle.
+authenticated identity active profile/context roles permissions ownership authorization decisions 
 
-7. Authentication and Authorization Consistency 
+Authorization must be enforced server-side.
 
-AG-06 remains authoritative for authentication and authorization.
+The Android application and other clients must not manufacture or locally elevate privileges.
 
-AG-07 protects the security boundary.
+Administrative or owner-level operations require server-authorized credentials and permissions.
 
-AG-05 exposes protected operations through the API.
+No administrative secret or owner credential may be embedded in source code or committed to Git.
 
-AG-09 consumes those operations as an untrusted client.
+9. Security Boundary 
 
-Therefore:
+AG-07 governs security requirements.
 
-Authentication → establishes identity.
+The system must protect:
 
-Authorization → determines permitted actions.
+authentication material session material private keys payment secrets webhook secrets provider credentials KYC information sensitive personal information production credentials infrastructure credentials 
 
-Domain state → determines whether the action is currently valid.
+The repository must not contain real production secrets.
 
-Security controls → protect the complete process.
+Security controls must remain effective across:
 
-No client-side role flag, UI state, local storage value, or external provider response may replace this chain.
+development testing CI/CD production release 10. External Integrations 
 
-8. API Compatibility 
+AG-08 governs external integrations.
 
-AG-05 remains the public API contract boundary.
+External providers may include, where approved:
 
-All clients and systems consuming the API must respect:
+payments maps/location notifications KYC storage communication providers 
 
-approved request contracts approved response contracts authentication requirements authorization requirements validation rules lifecycle restrictions pagination filtering sorting idempotency error handling versioning correlation/reference identifiers where applicable 
+Provider-specific logic must remain behind controlled integration boundaries.
 
-Breaking API changes require controlled architectural coordination.
+External provider results do not automatically become authoritative NIDDE state.
 
-No implementation may silently change an approved API contract.
+The backend validates and applies provider results according to the approved contracts.
 
-9. Security Consistency 
+Provider credentials must remain outside source-controlled code.
 
-AG-07 security requirements apply across the complete architecture.
+11. Android Architecture 
 
-The system must maintain:
+AG-09 defines the Android architecture.
 
-least privilege defense in depth server-side authorization secure secret handling sensitive-data minimization input validation safe error handling auditability rate and abuse controls replay protection where required secure integration boundaries controlled failure behavior 
+Android is an untrusted client.
 
-Security requirements must not be weakened by implementation convenience.
+Android responsibilities include:
 
-10. External Integration Consistency 
+presentation user interaction approved API requests server-state presentation local controlled caching approved location presentation notifications payment-flow initiation KYC presentation client-side error handling 
 
-AG-08 remains the external integration boundary.
+Android must not independently decide:
 
-External providers are untrusted dependencies.
+payment success KYC approval ownership role assignment protected lifecycle transitions financial settlement 
 
-Provider output must be:
+Local state must never become authoritative domain state.
 
-authenticated where applicable validated mapped into approved internal structures prevented from directly becoming authoritative domain state 
+12. Service Lifecycle 
 
-Provider-specific SDKs and APIs must remain isolated behind approved integration boundaries.
+The authoritative service lifecycle is:
 
-External providers must not become authoritative owners of NIDDE:
+REQUESTED ↓ ACCEPTED ↓ EN_ROUTE ↓ ARRIVED ↓ IN_PROGRESS ↓ COMPLETED 
 
-users roles permissions service lifecycle payments cash settlement KYC authorization administrative authority 11. Payment Consistency 
+Cancellation and error states are supported according to the domain and API contracts.
 
-Payment and Cash Transaction remain separate domain concepts.
+Clients may request valid transitions.
 
-Electronic payment authority follows:
+The backend determines whether a requested transition is authorized and valid.
 
-Client → approved API → NIDDE backend → AG-08 payment integration → validated provider result/webhook → server-side Payment state
+Concurrent state changes must be handled safely.
 
-The following pattern remains prohibited:
+13. Payments 
 
-client → payment_success = true → server accepts success
+Payment authority remains server-side.
 
-Payment processing must preserve:
+The approved authority chain is:
 
-authorization idempotency webhook validation replay protection duplicate protection reconciliation auditability 
+Client ↓ Approved API Operation ↓ NIDDE Backend ↓ Approved Payment Integration ↓ Validated Provider Result ↓ Server Payment State 
 
-Cash settlement must remain separately modeled and server-authoritative.
+The client must never treat a locally supplied success value as authoritative payment confirmation.
 
-12. KYC Consistency 
+Payment operations must respect approved idempotency requirements.
 
-KYC remains a protected server-controlled process.
+Cash settlement remains a separate domain concept and must also remain server-authoritative.
 
-The architecture distinguishes:
+14. KYC 
 
-KYC submission document handling KYC review KYC approval KYC rejection KYC document access 
+KYC workflows are controlled by AG-06, AG-07, and AG-08 according to responsibility.
 
-The Android client may present KYC workflows but cannot approve KYC.
+The client may:
 
-External KYC providers may provide verification information but do not automatically receive NIDDE administrative authority.
+initiate KYC collect approved information capture/select approved documents submit approved references display KYC status 
 
-Sensitive KYC documents must remain within approved secure storage and integration boundaries.
+The client must not:
 
-13. Location and Tracking Consistency 
+approve KYC fabricate approval expose unrestricted KYC information store sensitive documents unnecessarily 
 
-Location and tracking information remains sensitive operational information.
+KYC decisions remain server-authoritative.
 
-Location data must follow:
+15. Location and Tracking 
 
-authorization purpose limitation minimum necessary access secure transport controlled retention appropriate exposure 
+Location functionality must follow least privilege and purpose limitation.
 
-Tracking information alone cannot prove:
+The system must account for:
 
-payment completion service completion cash settlement 
+permission granted permission denied permission revoked unavailable location degraded location approved background access where explicitly required 
 
-Android presentation, mapping providers, and backend processing must preserve this rule.
+Location information must not independently prove:
 
-14. Messaging Consistency 
+payment service completion cash settlement 
 
-Conversation and Message access requires server-side authorization.
+Sensitive location data must be minimized and protected.
 
-A conversation identifier alone is never sufficient authorization.
+16. Messaging 
 
-The architecture must preserve:
+Messaging must use server-authorized conversations.
 
-participant authorization message validation lifecycle restrictions moderation requirements sensitive-data protection 
+The backend remains responsible for:
 
-Notifications must not independently become authoritative business state.
+participant authorization conversation membership message permissions lifecycle restrictions validation moderation rules 
 
-15. Notification Consistency 
+A conversation identifier alone is never authorization.
 
-Notifications are informational or delivery mechanisms.
+The client displays only server-authorized conversations and messages.
 
-A notification failure, delay, duplication, or loss must not automatically change:
+17. Notifications 
 
-request state service state payment state KYC state financial settlement 
+Notifications are informational delivery mechanisms.
 
-When authoritative state is required, the client must retrieve it from the backend.
+They may communicate:
 
-16. Android Consistency 
+service updates offers messages payments KYC status administrative events 
 
-AG-09 defines Android as an untrusted client.
+A notification must never independently change authoritative:
 
-The Android application must:
+service state payment state KYC state financial settlement 
 
-consume approved APIs display server-authoritative state request valid operations protect session material minimize local sensitive data handle degraded connectivity respect idempotency avoid provider-specific domain authority 
+When notification delivery is delayed, duplicated, or lost, the client must retrieve authoritative state from the backend when necessary.
 
-The Android application must never become an independent authoritative backend.
+18. Local Storage and Offline Behavior 
 
-17. Local Storage Consistency 
+Local persistence is limited to approved use cases.
 
-Local persistence may support:
+Permitted examples include:
 
-preferences controlled caches approved UI state approved offline information authentication/session material where explicitly required 
+non-sensitive preferences controlled cache approved UI state approved offline information securely protected session material where required 
 
 Local storage must never become authoritative for:
 
-roles permissions ownership payment success KYC approval protected lifecycle state financial settlement administrative authority 
+payment success KYC approval ownership roles administrative privilege protected lifecycle state 
 
-Cached information requires controlled refresh and invalidation behavior.
+Offline operations must respect API idempotency.
 
-18. Offline and Retry Consistency 
+Non-repeatable operations must not be blindly replayed after reconnecting.
 
-Offline behavior must not create duplicate authoritative effects.
+19. Error Handling 
 
-Retryable operations must respect AG-05 and AG-08 idempotency requirements.
+Errors must be represented safely across the system.
 
-Financial and other non-repeatable operations must not be blindly replayed after connectivity returns.
+Clients must not expose:
 
-The client must distinguish between:
+stack traces SQL errors tokens passwords private keys provider credentials payment secrets internal infrastructure details unrestricted KYC information 
 
-offline timeout temporary server failure authentication failure authorization failure validation failure permanent business rejection 19. Testing Consistency 
+Where approved, correlation/reference identifiers may be displayed for support.
 
-AG-10 must verify the contracts established by AG-02 through AG-09.
+Internal diagnostic information remains subject to AG-07 and observability requirements.
 
-Testing must not redefine expected architecture merely because an implementation is convenient.
+20. Testing 
 
-Security-sensitive and business-critical tests must cover, where applicable:
+AG-10 governs testing architecture.
 
-authentication authorization ownership lifecycle transitions API contracts payment authority webhook validation idempotency KYC authorization sensitive-data protection Android behavior offline/retry behavior external integration failures 
+The architecture must support testing of:
 
-Tests must use controlled mocks, fakes, fixtures, and test environments where appropriate.
+domain behavior API contracts authentication authorization lifecycle payments KYC location messaging notifications Android behavior persistence offline behavior security-sensitive behavior integration boundaries failure scenarios 
 
-Production secrets must never be required for ordinary automated testing.
+Production credentials must never be required for ordinary automated testing.
 
-20. CI/CD Consistency 
+21. CI/CD 
 
-AG-11 must automate verification and delivery of the approved architecture.
+AG-11 governs CI/CD architecture.
 
-CI/CD must not:
+CI/CD must preserve:
 
-bypass required tests expose production secrets silently modify architecture contracts bypass security controls deploy unverified changes as approved releases 
+architecture boundaries security requirements controlled configuration test execution artifact integrity secret protection environment separation controlled deployment 
 
-CI/CD must preserve repository structure, build requirements, testing requirements, security checks, and release controls defined by the approved architecture.
+CI/CD secrets must be supplied through the approved CI/CD secret mechanism.
 
-21. Production Consistency 
+Secrets must not be committed to the repository.
 
-AG-12 must operate the approved architecture without changing its domain authority.
+22. Production 
 
-Production infrastructure must preserve:
+AG-12 governs production architecture.
 
-secure configuration secret management access control protected logs monitoring backup and recovery controlled administrative access dependency protection integration security 
+Production must maintain appropriate separation between:
 
-Production configuration must not create a second source of truth for domain decisions.
+application runtime data persistence external integrations secrets observability operational controls 
 
-22. Release Consistency 
+Production configuration must not be copied into source-controlled example files.
 
-AG-13 controls release readiness and release execution.
+Production authority remains server-side.
 
-A release must not be treated as architecturally ready merely because:
+23. Release 
 
-the application builds tests pass partially Android screens exist APIs respond infrastructure is deployed 
+AG-13 governs release architecture.
 
-Release readiness requires the approved architecture and required verification evidence to be satisfied.
+Release processes must preserve:
 
-A release process must not unlock implementation requirements that remain architecturally unresolved.
+artifact integrity version traceability environment separation controlled configuration rollback/recovery requirements release authorization security requirements 
 
-23. Secrets and Sensitive Data 
+A release must not silently introduce an architecture-breaking change.
 
-The following must never be committed to Git:
+24. Cross-Gate Compatibility 
 
-production passwords API secrets private keys payment credentials webhook secrets database credentials cloud credentials KYC provider secrets authentication secrets production tokens KYC documents 
+The following dependency direction must remain valid:
 
-.env.example may contain only variable names and safe placeholders.
+AG-01 ↓ AG-02 ↓ AG-03 ↓ AG-04 ↓ AG-05 ↓ AG-06 ↓ AG-07 ↓ AG-08 ↓ AG-09 ↓ AG-10 ↓ AG-11 ↓ AG-12 ↓ AG-13 
 
-Sensitive information must follow AG-07 and AG-08 requirements.
+This sequence represents architecture progression.
 
-24. Error and Failure Consistency 
+It does not mean that every implementation component may directly depend on every previous gate.
 
-Failure behavior must remain controlled across all layers.
+Implementation dependencies must follow the boundaries defined by the individual gates.
 
-Errors must not expose:
+25. Conflict Resolution 
 
-secrets credentials tokens private keys raw SQL errors stack traces internal infrastructure details unrestricted KYC contents 
+If this baseline conflicts with an individual architecture gate:
 
-External provider failures must not automatically become successful domain states.
+Identify the conflicting requirement. Determine the owning gate. Treat the owning verified gate as authoritative for that responsibility. Resolve the cross-gate contradiction through controlled review. Update this baseline only after the authoritative decision is established. 
 
-Client failures must not become authoritative domain mutations.
+This document must never silently override an individual gate.
 
-25. Audit and Traceability 
+26. Repository Security Baseline 
 
-Critical operations must remain traceable where applicable.
+The repository must not contain:
 
-This includes:
+production credentials private keys payment secrets webhook secrets provider secret keys real authentication secrets KYC identity documents production database dumps sensitive production exports unapproved personal-data dumps 
 
-authentication events recovery events authorization changes administrative actions lifecycle transitions payment events KYC decisions integration events security-sensitive operations release and deployment evidence where required 
+.env.example may contain only safe placeholders and documentation.
 
-Correlation/reference identifiers may be used to connect related events without exposing sensitive information.
+Real environment configuration remains outside the repository.
 
-26. Conflict Resolution Rule 
+27. Implementation Readiness 
 
-If an implementation or later document conflicts with an approved architecture contract:
+Architecture completion does not by itself authorize unrestricted implementation.
 
-Stop the affected implementation. Identify the conflicting gates. Determine the authoritative owner. Record the conflict. Resolve the architecture decision. Update the appropriate controlled document. Re-run cross-gate verification. Only then continue implementation. 
+Before implementation begins, the following must be verified:
 
-No silent workaround is permitted.
+[ ] AG-01 through AG-13 are uniquely identified [ ] Active architecture documents are unambiguous [ ] Superseded documents are clearly marked [ ] Master File Manifest is canonical [ ] Project control document is consistent [ ] Repository structure is verified [ ] Physical-file inventory is completed [ ] Dependency ownership is reviewed [ ] Security restrictions are enforced [ ] .gitignore is present [ ] .env.example contains no real secrets [ ] Cross-gate consistency is verified [ ] Implementation sequence is approved 28. Implementation Sequence 
 
-27. Implementation Lock 
+The controlled implementation sequence is:
 
-The complete architecture remains:
+Architecture Baseline ↓ Physical File Inventory ↓ Dependency Graph ↓ Backend Foundation ↓ Database Foundation ↓ Authentication / Authorization ↓ Marketplace Foundation ↓ Requests / Offers ↓ Service Lifecycle ↓ Messaging ↓ Location / Tracking ↓ Payments / Cash ↓ KYC ↓ Notifications ↓ Reviews ↓ Administration ↓ Android Integration ↓ Testing ↓ CI/CD ↓ Production ↓ Release 
 
-LOCKED
+Each stage must satisfy its applicable architecture requirements.
 
-until the required verification and final readiness conditions are satisfied.
+29. Document Authority 
 
-Writing an architecture document does not authorize implementation.
+This document is a final cross-gate baseline and reference.
 
-Passing a single gate does not automatically authorize implementation.
+It is not:
 
-Implementation begins only after the complete approved architecture sequence and final readiness controls explicitly permit it.
+a replacement for AG-01 through AG-13 an implementation specification a backend API specification a database migration specification a security secrets store a deployment configuration a production configuration a release artifact 
 
-28. Final Gate Map 
-
-The intended architecture sequence is:
-
-AG-02 — Repository Structure
-AG-03 — System / Dependency Architecture
-AG-04 — Data Model
-AG-05 — API Contract
-AG-06 — Authentication / Authorization
-AG-07 — Security Model
-AG-08 — External Integrations
-AG-09 — Android Architecture
-AG-10 — Testing Architecture
-AG-11 — CI/CD Architecture
-AG-12 — Production Architecture
-AG-13 — Release Architecture
-
-Each gate owns its defined boundary.
-
-No gate may silently assume ownership belonging to another gate.
-
-29. Verification Criteria 
-
-Final architecture alignment may become VERIFIED only when:
-
-AG-02 through AG-13 are present in the canonical architecture sequence repository structure is compatible with the architecture system boundaries are consistent data ownership is consistent API contracts are consistent authentication and authorization are consistent security requirements are consistent external integrations are isolated Android remains an untrusted client testing covers required architecture behavior CI/CD preserves verification requirements production preserves approved authority boundaries release controls preserve readiness requirements payment and cash boundaries remain separate KYC authority remains server-side lifecycle semantics remain consistent location privacy remains consistent notification delivery does not become business authority local storage does not become domain authority idempotency and retry behavior remain consistent secrets are protected no unresolved blocking contradiction exists required verification evidence is recorded 
-
-READY FOR FINAL VERIFICATION does not mean VERIFIED.
+Individual architecture gates remain authoritative for their defined responsibilities.
 
 30. Control Statement 
 
-This document establishes the final cross-gate compatibility boundary for NIDDE architecture.
+NIDDE maintains one coherent architecture baseline across AG-01 through AG-13.
 
-AG-02 through AG-13 must be treated as one controlled architecture.
+The architecture preserves:
 
-Earlier authoritative domain decisions remain protected.
+server authority explicit ownership controlled dependencies secure client boundaries protected external integrations controlled payments controlled KYC controlled location controlled notifications testability CI/CD separation production separation release control 
 
-Later implementation-oriented gates must consume and preserve those decisions.
+No client-side behavior may silently redefine an approved architecture contract.
 
-No Android client, API consumer, external provider, test system, CI/CD pipeline, production environment, or release process may silently redefine authoritative NIDDE business state.
+No cross-gate contradiction may be resolved through an undocumented workaround.
 
-Any discovered contradiction must be resolved through controlled architecture revision before affected implementation continues.
+NIDDE FINAL ARCHITECTURE BASELINE — ACTIVE
 
-NIDDE FINAL ARCHITECTURE ALIGNMENT: READY FOR FINAL VERIFICATION
+STATUS: READY FOR VERIFICATION
 
-IMPLEMENTATION: LOCKED
+IMPLEMENTATION: CONTROLLED
+
+ARCHITECTURE BASELINE: AG-01 → AG-13
 
 
