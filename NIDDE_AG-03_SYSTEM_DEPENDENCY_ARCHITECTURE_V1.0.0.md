@@ -1,569 +1,511 @@
-# NIDDE — AG-03 SYSTEM & DEPENDENCY ARCHITECTURE
+NIDDE — AG-03 SYSTEM & DEPENDENCY ARCHITECTURE 
 
 Project: NIDDE
 Phase: 00 — ARCHITECTURE
-Gate: AG-03 — System & Dependency Architecture
+Gate: AG-03 — System Architecture
 Revision: V1.0.1
-Status: READY FOR FORMAL GATE REVIEW
+Status: READY FOR VERIFICATION
 Implementation: LOCKED
 Physical-file count: NOT YET CALCULATED
 
-## 1. Objective
+1. Objective 
 
-AG-03 defines the system boundaries, domain boundaries, application layers, dependency direction, service ownership, interfaces, runtime responsibilities, core data flows, security boundaries, and failure rules required before implementation.
+AG-03 defines the logical system architecture required before implementation.
 
-This document is an architecture contract.
+It establishes:
 
-It does not authorize application implementation.
+system boundaries logical application layers domain and capability boundaries ownership relationships dependency direction interface boundaries runtime responsibilities major data flows cross-domain communication rules security and failure boundaries 
 
-## 2. System Boundary
+AG-03 is an architecture contract.
+
+It does not implement application source code, database migrations, Android source code, CI/CD workflows, deployment infrastructure, or production configuration.
+
+2. System Boundary 
 
 NIDDE is a multi-role services marketplace supporting:
 
-- Client
-- Artisan
-- Company
-- Admin
+Client Artisan Company Admin 
 
-Backend authorization is authoritative.
+The backend/domain boundary remains authoritative for protected business decisions.
 
-Clients must never establish privileged authority through client-controlled state.
+Clients are interaction layers and must never establish privileged authority through client-controlled state.
 
-External providers are untrusted dependencies and must not become authoritative owners of NIDDE domain state.
+The system must preserve the architecture boundaries established by AG-01 and AG-02.
 
-## 3. Logical Architecture
+3. Logical Architecture CLIENT / ARTISAN / COMPANY / ADMIN | v CLIENT / API INTERFACE | v APPLICATION LAYER / USE CASES | v DOMAIN LAYER ^ | INTERFACES / PORTS ^ | INFRASTRUCTURE / ADAPTERS | | v v DATABASE EXTERNAL SERVICES 
 
-The logical architecture is:
+Dependency inversion is intentional:
 
-Client Applications
-        |
-        v
-Interface / API Layer
-        |
-        v
-Application / Use-Case Layer
-        |
-        v
-Domain Layer
-        |
-        +----------------------+
-        |                      |
-        v                      v
-Data Access Abstractions   Integration Abstractions
-        |                      |
-        v                      v
-Database / Persistence    External Provider Adapters
+domain logic does not depend on infrastructure implementations; infrastructure implements approved interfaces required by application/domain logic; interface/API layers do not own core business rules; clients consume published contracts only. 4. Domain and Capability Boundaries 
 
-The dependency rule is:
+AG-03 defines the logical boundaries of the system without overriding the authoritative ownership defined by AG-04 or the specialized architecture gates.
 
-Interface -> Application -> Domain
+Core business domains Identity & Accounts Authentication / Authorization Client Artisan Company Services / Marketplace Requests Offers Service Lifecycle Messaging Location / Tracking Payments Cash Reviews / Ratings KYC / Verification Notifications Admin / Moderation Analytics / Reporting Cross-cutting capabilities 
 
-Infrastructure implements or supports approved abstractions and must not become a dependency of Domain business logic.
+The following are cross-cutting capabilities rather than independent authoritative business-state domains:
 
-## 4. Domain Boundaries
+Security Audit / Logging Correlation / Observability Validation Abuse / Rate Control 
 
-NIDDE domains include:
+Their detailed ownership remains with the applicable architecture gates.
 
-- Identity & Accounts
-- Authentication & Authorization
-- Client
-- Artisan
-- Company
-- Services / Marketplace
-- Requests
-- Offers
-- Service Lifecycle
-- Messaging
-- Location / Tracking
-- Payments
-- Cash
-- Reviews / Ratings
-- KYC / Verification
-- Notifications
-- Admin / Moderation
-- Analytics / Reporting
-- Security
-- Audit / Logging
+Security controls are governed by AG-07.
 
-Each domain owns its business rules and exposes explicit contracts.
+Audit data modeling is governed by AG-04, with security/audit controls coordinated with AG-07.
 
-A domain must not silently transfer ownership of its authoritative state to another domain.
+API-level correlation and error behavior are governed by AG-05.
 
-## 5. Application Layers
+Testing architecture is governed by AG-10.
 
-### 5.1 Interface Layer
+CI/CD architecture is governed by AG-11.
 
-The Interface Layer is responsible for:
+Production observability and operational controls are governed by AG-12.
 
-- transport handling
-- request parsing
-- serialization
-- boundary validation
-- authentication-context extraction
-- API error mapping
+5. Ownership Principle 
 
-The Interface Layer must not contain authoritative core business decisions.
+Every authoritative business entity must have one authoritative domain owner.
 
-### 5.2 Application Layer
+AG-03 defines logical ownership boundaries.
 
-The Application Layer is responsible for:
+AG-04 is authoritative for the concrete data entities, relationships, lifecycle fields, constraints, and persistence model.
 
-- use-case orchestration
-- application workflows
-- transaction boundaries
-- authorization at use-case boundaries
-- coordination between domain services
-- controlled cross-domain operations
+AG-03 must not create a second authoritative owner for an AG-04 entity.
 
-The Application Layer must respect domain ownership.
+Examples:
 
-It must not bypass domain rules or directly mutate another domain's authoritative state without an approved contract.
+Concern Logical owner User identity Identity / Accounts Authentication Authentication Authorization Authorization Client profile Client Artisan profile Artisan Company profile Company Marketplace services Services / Marketplace Service Request Requests Offer Offers Service lifecycle Service Lifecycle Conversation / Message Messaging Location / Tracking Location / Tracking Electronic Payment Payments Cash settlement record Cash Review Reviews / Ratings KYC Case / verification state KYC / Verification Notification record Notifications Administrative actions Admin / Moderation Analytics projections/events Analytics / Reporting 
 
-### 5.3 Domain Layer
+No cross-cutting capability may silently become the authoritative owner of an existing business entity.
 
-The Domain Layer owns:
+6. Application Layers Interface Layer 
 
-- business rules
-- invariants
-- policies
-- domain state transitions
-- authoritative business decisions
+Responsible for:
+
+transport request parsing serialization boundary validation authentication-context extraction API error mapping 
+
+The Interface Layer must not contain core business decisions.
+
+Application Layer 
+
+Responsible for:
+
+use cases orchestration transaction boundaries coordination between domains authorization checks at use-case boundaries invoking domain policies coordinating external effects through approved interfaces Domain Layer 
+
+Responsible for:
+
+business rules invariants policies lifecycle transitions domain decisions 
 
 The Domain Layer must not directly depend on:
 
-- HTTP
-- Android UI
-- database implementations
-- external provider SDKs
-- provider-specific implementations
+HTTP implementations Android UI database implementations external provider SDKs infrastructure-specific implementations Infrastructure Layer 
 
-### 5.4 Infrastructure Layer
+Responsible for implementing approved technical interfaces, including:
 
-Infrastructure is responsible for:
+database access external-provider adapters storage adapters notification adapters payment adapters mapping adapters KYC/integration adapters other approved infrastructure concerns 
 
-- database persistence
-- repository implementations
-- external-provider adapters
-- storage adapters
-- payment adapters
-- notification adapters
-- KYC adapters
-- mapping and routing adapters
-- other technical integrations
+Infrastructure must not silently redefine domain ownership.
 
-Infrastructure must implement approved contracts and abstractions.
-
-## 6. Dependency Direction
+7. Dependency Direction 
 
 The approved dependency direction is:
 
-Client
-    ->
-Interface
-    ->
-Application
-    ->
-Domain
-
-Infrastructure provides implementations for approved technical abstractions.
+Clients | v API / Interface | v Application | v Domain ^ | Infrastructure / Adapters 
 
 Rules:
 
-1. Clients depend only on published contracts.
-2. Domain logic must not depend directly on infrastructure implementations.
-3. Database access must be behind approved data-access boundaries.
-4. External providers must be isolated behind adapters.
-5. Circular dependencies are prohibited unless explicitly approved through project control.
-6. Cross-domain direct database writes are prohibited.
-7. Dependency changes require impact analysis.
-8. Provider-specific implementation details must not leak into domain contracts without explicit architectural approval.
+Clients depend only on published contracts. Interface code may depend on application interfaces/use cases. Application code may coordinate domain and approved infrastructure interfaces. Domain code must not depend on infrastructure implementations. Database access must remain behind approved data-access boundaries. External providers must remain isolated behind adapters. Provider-specific SDKs must not become domain dependencies. Circular dependencies are forbidden unless explicitly approved. Cross-domain direct database writes are forbidden. Dependency changes require impact analysis. A later gate must not silently reverse an approved dependency direction. Android dependencies remain governed by AG-09. CI/CD dependencies remain governed by AG-11. Production dependencies remain governed by AG-12. 8. Domain Interaction 
 
-## 7. Core Request Flow
+Domains must communicate through explicit contracts.
 
-A normal service-request flow is:
+Preferred order:
 
-Client
-    ->
-Authenticate
-    ->
-Discover Services
-    ->
-Create Request
-    ->
-Validate
-    ->
-Persist Request
-    ->
-Notify Eligible Providers
-    ->
-Receive Offers
-    ->
-Select Offer
-    ->
-Start Service
+Explicit domain contract | v Application orchestration | +---- synchronous result | +---- event/message when asynchronous behavior is required 
 
-Each operation must pass through the appropriate authorization and domain rules.
+Cross-domain communication must define:
 
-## 8. Offer Flow
+owner caller input output authorization requirement transaction/consistency expectation failure behavior audit/correlation requirement where applicable 
 
-The offer flow is:
+Hidden cross-domain side effects are forbidden.
 
-Provider
-    ->
-Authenticate
-    ->
-Authorize
-    ->
-Check Eligibility
-    ->
-Submit Offer
-    ->
-Validate Offer
-    ->
-Persist Offer
-    ->
-Request Receives Offer
+9. Database Boundary 
 
-The server remains authoritative for eligibility, ownership, offer state, and acceptance.
+The database is a protected infrastructure resource.
 
-## 9. Service Lifecycle
+Rules:
 
-The authoritative service lifecycle is:
+domain logic does not directly access database implementations; database access is performed through approved repository/data-access boundaries; cross-domain direct writes are forbidden; ownership constraints are enforced through the application/domain architecture and appropriate database constraints; migrations are governed by AG-04; production database operations are governed by AG-12. 
 
-REQUESTED
-    ->
-ACCEPTED
-    ->
-EN_ROUTE
-    ->
-ARRIVED
-    ->
-IN_PROGRESS
-    ->
-COMPLETED
+AG-03 does not define physical database tables.
 
-Cancellation and error states must be modeled explicitly.
+AG-04 is authoritative for the logical data model.
 
-Every protected transition must define:
+10. External Integration Boundary 
 
-- previous state
-- new state
-- authorized actor
-- timestamp
-- reason where required
-- correlation or reference identifier where required
+External providers are isolated behind infrastructure adapters.
 
-Service Lifecycle owns authoritative service-state transitions.
+Potential integrations include:
 
-Other domains may request a transition through an approved interface but may not silently mutate lifecycle state.
+maps geocoding routing electronic payment providers push notification providers email/SMS where approved secure storage identity/KYC providers other explicitly approved external services 
 
-## 10. Payment Flow
+Each critical integration must define:
 
-The payment flow is:
+adapter boundary provider authentication input/output validation timeout behavior failure behavior retry behavior where safe idempotency where required reconciliation where applicable audit/correlation requirements secure credential handling 
 
-Payment Trigger
-    ->
-Authorization
-    ->
-Approved Cash or Electronic Payment Flow
-    ->
-Provider / Transaction Result
-    ->
-Validated Financial State
-    ->
-Notification
-    ->
-Audit
+AG-08 is authoritative for the external integration architecture.
 
-Electronic payment success must never be accepted solely from client-side state.
-
-Provider callbacks and webhooks must be validated before they affect authoritative payment state.
-
-## 11. Financial Boundary
-
-Payments and Cash are separate concepts.
-
-Financial operations must be:
-
-- attributable
-- auditable
-- protected against duplicate processing
-- explicit about pending, successful, failed, rejected, and cancelled states
-- linked to appropriate internal references
-
-Cash settlement must not be represented as electronic-provider success.
-
-Payment and Cash records remain under their approved financial ownership boundaries.
-
-## 12. Domain Ownership
-
-The authoritative owners are:
-
-| Concern | Authoritative Owner |
-|---|---|
-| Identity | Identity / Accounts |
-| Sessions and authentication state | Authentication / Authorization |
-| Roles and permissions | Authentication / Authorization |
-| Marketplace services | Services / Marketplace |
-| Requests | Requests |
-| Offers | Offers |
-| Service state | Service Lifecycle |
-| Messages | Messaging |
-| Location and tracking | Location / Tracking |
-| Electronic financial transactions | Payments |
-| Cash settlement records | Cash |
-| Reviews | Reviews / Ratings |
-| Verification state | KYC / Verification |
-| Notifications | Notifications |
-| Privileged moderation actions | Admin / Moderation |
-| Operational metrics | Analytics / Reporting |
-| Security controls | Security |
-| Audit evidence | Audit / Logging |
-
-Cross-domain operations must use approved interfaces and must preserve the authoritative ownership of each domain.
-
-## 13. Authorization Boundary
+11. Authorization Boundary 
 
 Authentication establishes identity.
 
 Authorization determines permission.
 
-Server-side authorization is mandatory for privileged operations.
+All protected operations require server-side authorization.
 
-The server must never trust client-controlled values for:
+The system must never trust client-provided values as authoritative for:
 
-- role
-- ownership
-- payment success
-- KYC approval
-- service completion
-- administrative authority
+role permission ownership administrative authority KYC approval payment success protected lifecycle state service completion 
 
-Authorization must be evaluated according to the authenticated identity, requested operation, resource ownership, and applicable domain rules.
+AG-06 defines authentication and authorization architecture.
 
-## 14. Cross-Domain Communication
+AG-07 defines the security controls protecting those mechanisms.
 
-The preferred communication order is:
+AG-05 defines the API contract through which these decisions are enforced.
 
-1. Explicit domain contract
-2. Application orchestration
-3. Event or message when asynchronous behavior is required
+12. Service Lifecycle Authority 
 
-Every cross-domain operation must define:
+The authoritative lifecycle is:
 
-- owning domain
-- requesting domain
-- input
-- output
-- authorization requirement
-- failure behavior
-- transaction or consistency expectation
+REQUESTED -> ACCEPTED -> EN_ROUTE -> ARRIVED -> IN_PROGRESS -> COMPLETED 
 
-Hidden side effects are prohibited.
+Cancellation and error states are modeled explicitly.
 
-A cross-domain call must not silently mutate unrelated authoritative state.
+Service Lifecycle is the authoritative owner of lifecycle transitions.
 
-## 15. External Integration Boundary
+Other domains may request an approved transition but must not silently mutate lifecycle state.
 
-Potential external integrations include:
+The server must validate:
 
-- maps
-- geocoding
-- routing
-- electronic payment providers
-- push notification providers
-- email providers where approved
-- SMS providers where approved
-- secure storage
-- KYC providers
+actor authorization current state transition eligibility domain conditions concurrency requirements 
 
-Each integration must be isolated behind an adapter or approved integration boundary.
+AG-04 defines the authoritative lifecycle data representation.
 
-Integration requirements include, where applicable:
+AG-05 defines the API contract for lifecycle operations.
 
-- authentication
-- secure secret handling
-- timeout policy
-- failure policy
-- retry policy
-- idempotency policy
-- webhook validation
-- audit requirements
-- provider-reference tracking
+AG-06 defines authorization requirements.
 
-External provider output must be validated before affecting authoritative NIDDE state.
+AG-07 defines security protections.
 
-## 16. Security and Audit Boundary
+AG-09 defines Android lifecycle presentation and interaction.
 
-Required system controls include:
+13. Request and Offer Flow Request Client -> Authenticate -> Discover -> Create Request -> Validate -> Persist -> Notify eligible providers -> Receive Offers -> Select Offer -> Request approved service transition Offer Provider -> Authenticate / Authorize -> Validate eligibility -> Access eligible Request -> Submit Offer -> Validate -> Persist Offer 
 
-- input validation
-- authorization
-- rate limiting
-- secure secret handling
-- sensitive-data protection
-- audit logging
-- abuse controls
-- security testing
-- controlled external integration boundaries
+The server determines whether each operation is permitted.
 
-Real secrets must never be committed to Git.
+AG-04 defines the underlying request and offer entities.
 
-Security-specific requirements remain governed by AG-07.
+AG-05 defines their API contracts.
 
-Authentication and authorization-specific requirements remain governed by AG-06.
+AG-06 defines authorization.
 
-AG-03 defines the system-level boundaries and must not replace those gates.
+14. Payment Boundary 
 
-## 17. Failure and Consistency
+Electronic Payments and Cash are separate concepts.
+
+The approved logical flow is:
+
+Payment Trigger -> Authorization -> Cash OR Approved Electronic Flow -> Validated Result -> Financial Record -> Notification where applicable -> Audit 
+
+The client is never authoritative for electronic payment success.
+
+Provider failure must never be interpreted as payment success.
+
+Electronic payment confirmation must pass through the approved AG-08 integration boundary.
+
+AG-04 owns the Payment and Cash data model.
+
+AG-05 owns payment API contracts and idempotency requirements.
+
+AG-07 owns payment-related security controls.
+
+AG-08 owns provider integration and webhook processing.
+
+15. KYC Boundary 
+
+KYC / Verification is a protected domain.
+
+The architecture must distinguish:
+
+KYC submission document/reference handling review approval rejection verification state 
+
+External KYC providers do not become authoritative owners of NIDDE roles or permissions.
+
+KYC authorization is governed by AG-06.
+
+KYC security is governed by AG-07.
+
+External KYC integration is governed by AG-08.
+
+KYC data modeling is governed by AG-04.
+
+Android KYC interaction is governed by AG-09.
+
+16. Messaging Boundary 
+
+Messaging owns:
+
+conversations messages message lifecycle where applicable 
+
+Access requires participant authorization.
+
+A conversation identifier alone is never sufficient authorization.
+
+The messaging domain must not bypass AG-06 authorization or AG-07 security controls.
+
+The API boundary is governed by AG-05.
+
+The Android presentation boundary is governed by AG-09.
+
+17. Location and Tracking Boundary 
+
+Location / Tracking owns the logical handling of:
+
+location references tracking events tracking-related business interactions 
+
+Tracking information is operational data.
+
+Tracking alone is not authoritative proof of:
+
+payment completion service completion cash settlement 
+
+Location privacy and security requirements are coordinated with AG-04, AG-07, AG-08, and AG-09.
+
+18. Notifications Boundary 
+
+Notifications are a supporting capability around authoritative business events.
+
+Notification delivery is never the source of truth for:
+
+request state service lifecycle payment state KYC approval financial settlement 
+
+A notification failure must not automatically mutate the underlying business state.
+
+Notification provider integration belongs to AG-08.
+
+Notification API contracts belong to AG-05.
+
+Android notification behavior belongs to AG-09.
+
+19. Analytics Boundary 
+
+Analytics / Reporting consumes approved operational information.
+
+Analytics must not become the authoritative owner of transactional business state.
+
+Analytics may use:
+
+events controlled projections approved reporting views aggregated operational data 
+
+Analytics logic must not directly mutate transactional source-of-truth records.
+
+AG-04 defines the analytics-related data model.
+
+Later analytics implementation must preserve all domain ownership boundaries.
+
+20. Administrative Boundary 
+
+Administrative and moderation operations require explicit server-side administrative authorization.
+
+Administrative actions must be attributable and auditable.
+
+The administrative layer must not bypass:
+
+AG-05 API contracts AG-06 authorization AG-07 security AG-04 audit/data requirements 
+
+An administrative UI or client must never become authoritative merely because it is hidden from normal users.
+
+21. Security and Audit Boundary 
+
+Security and Audit / Logging are cross-cutting capabilities.
+
+They are not independent owners of ordinary business entities.
+
+Security 
+
+AG-07 owns:
+
+security principles secret handling input/security validation abuse controls rate limiting requirements sensitive-data protection security logging security testing incident-security requirements Audit 
+
+AG-04 owns the logical Audit Event data model.
+
+AG-07 owns audit security requirements.
+
+Critical operations must remain traceable.
+
+Audit records must not contain:
+
+credentials secrets tokens unnecessary sensitive information 22. Correlation and Observability 
+
+Important operations should support a correlation/reference identifier where required.
+
+Correlation identifiers must:
+
+allow related events to be traced; remain non-sensitive; be propagated only through approved interfaces; not become authorization credentials. 
+
+API-level correlation behavior is governed by AG-05.
+
+Security logging is governed by AG-07.
+
+Production observability is governed by AG-12.
+
+Android diagnostic presentation is governed by AG-09.
+
+23. Core Data Flows Request Flow Client -> Authentication -> Authorization -> Request API -> Application Use Case -> Domain Validation -> Persistence -> Eligible Provider Notification -> Offers -> Selection -> Lifecycle Service Flow REQUESTED -> ACCEPTED -> EN_ROUTE -> ARRIVED -> IN_PROGRESS -> COMPLETED Payment Flow Authorized Operation -> Payment Domain -> Cash OR Approved Provider Adapter -> Validated Result -> Payment State -> Audit / Notification KYC Flow KYC Submission -> Validated KYC Operation -> Approved Storage / Provider Boundary -> Validated Result -> KYC State -> Authorized Review -> Decision -> Audit 
+
+External failures must never silently become successful internal business states.
+
+24. Failure and Consistency Rules 
 
 The system must distinguish at minimum:
 
-- success
-- failure
-- pending
-- rejected
-- cancelled
-- expired
+success pending failure rejected cancelled expired 
 
-External provider failures must never be interpreted as successful business operations.
+Retry behavior must be bounded and safe.
 
-Retries are allowed only when safe.
+Operations capable of producing duplicate side effects must use explicit idempotency where required.
 
-Non-idempotent operations must not be blindly retried.
+Financial operations require particular protection against:
 
-Financial operations require appropriate idempotency and duplicate-processing protection.
+duplicate processing replay inconsistent state unauthorized confirmation 
 
-## 18. Data Access Boundary
+External provider failures must be translated into controlled application/domain outcomes.
 
-Application and domain logic must not perform uncontrolled direct database operations.
+No failure path may silently grant authorization or create a false authoritative state.
 
-Persistence must occur through approved data-access boundaries.
+25. Forbidden Patterns 
 
-Cross-domain database writes are prohibited.
+The following are prohibited:
 
-Each authoritative domain must retain control of its own persisted business state.
-
-Database implementation details remain infrastructure concerns.
-
-## 19. Observability and Audit
-
-Critical operations should produce sufficient information for operational diagnosis and audit.
-
-Where applicable, records should support:
-
-- correlation identifiers
-- actor identification
-- domain identification
-- operation identification
-- timestamps
-- provider references
-- failure classification
-- lifecycle transitions
-- financial events
-- administrative actions
-
-Logs must not expose secrets or unnecessary sensitive data.
-
-## 20. Compatibility Rules
+client-only authorization client-controlled role assignment client-controlled ownership direct privileged database access from clients domain dependency on infrastructure implementations provider SDK dependency inside core domain logic hidden cross-domain database writes duplicated authoritative business rules across clients business logic hidden inside transport controllers unapproved circular dependencies payment success inferred from client state client-controlled KYC approval unauthorized lifecycle mutation untracked financial mutations secrets in source control analytics mutation of transactional source-of-truth records arbitrary new architecture boundaries bypassing a later gate's ownership through AG-03 26. Cross-Gate Ownership Rules 
 
 AG-03 must remain compatible with:
 
-- AG-01 Technology Stack
-- AG-02 Repository Structure
-- AG-04 Data Model
-- AG-05 API Contract
-- AG-06 Authentication / Authorization
-- AG-07 Security Model
-- AG-08 External Integrations
+AG-01 — Technology Stack 
 
-Compatibility does not transfer ownership between gates.
+AG-03 does not override approved technology choices.
 
-AG-03 defines system and dependency architecture while referenced gates retain ownership of their respective contracts.
+AG-02 — Repository Structure 
 
-## 21. Implementation Boundary
+AG-03 consumes the repository boundaries established by AG-02.
+
+AG-03 does not create new top-level repository boundaries without an approved architecture change.
+
+AG-04 — Data Model 
+
+AG-04 is authoritative for:
+
+entities fields relationships constraints indexes lifecycle persistence audit data model migration strategy seed strategy AG-05 — API Contract 
+
+AG-05 is authoritative for:
+
+API resources request/response contracts error contracts pagination filtering/sorting idempotency API versioning webhook contract requirements AG-06 — Authentication / Authorization 
+
+AG-06 is authoritative for:
+
+identity authentication sessions/tokens roles permissions authorization account recovery privilege boundaries AG-07 — Security Model 
+
+AG-07 is authoritative for:
+
+application security secrets security validation abuse prevention rate limiting security logging sensitive-data protection security testing requirements security incident controls AG-08 — External Integrations 
+
+AG-08 is authoritative for:
+
+external providers adapters provider authentication payments integration maps notifications storage KYC/identity providers webhooks provider retry/failure behavior reconciliation AG-09 — Android Architecture 
+
+AG-09 is authoritative for the Android client architecture.
+
+AG-10 — Testing Architecture 
+
+AG-10 is authoritative for the system testing architecture.
+
+AG-11 — CI/CD Architecture 
+
+AG-11 is authoritative for CI/CD architecture and workflow policy.
+
+AG-12 — Production Architecture 
+
+AG-12 is authoritative for production topology and operational infrastructure.
+
+AG-13 — Release Architecture 
+
+AG-13 is authoritative for release and production-readiness architecture.
+
+AG-03 must not silently override any of these boundaries.
+
+27. Dependency Change Control 
+
+Any proposed dependency change must identify:
+
+affected component current dependency proposed dependency reason security impact data impact API impact testing impact operational impact affected architecture gates 
+
+A dependency change that creates an architecture contradiction must block the affected implementation until the contradiction is resolved.
+
+No silent dependency changes are permitted.
+
+28. Implementation Boundary 
 
 AG-03 does not authorize implementation.
 
-The following remain locked until the architecture and file-count conditions are satisfied:
+The following remain locked:
 
-APPLICATION IMPLEMENTATION = LOCKED
+APPLICATION IMPLEMENTATION = LOCKED PHYSICAL FILE COUNT = NOT YET CALCULATED 
 
-PHYSICAL FILE COUNT = NOT YET CALCULATED
+No implementation file may be created merely because AG-03 has been written or uploaded.
 
-Uploading an architecture document does not authorize application source-code implementation.
+The final physical-file inventory remains deferred until all required architecture gates are resolved.
 
-## 22. Verification Requirements
+29. Verification Checklist 
 
-AG-03 may become VERIFIED only after all applicable checks pass:
+AG-03 may become VERIFIED only when all applicable checks pass:
 
-1. Static document consistency check.
-2. Compatibility with AG-01.
-3. Compatibility with AG-02 repository boundaries.
-4. Domain ownership review.
-5. Dependency-direction review.
-6. Critical-flow review.
-7. Security and authorization review.
-8. Compatibility review against dependent architecture contracts.
-9. Evidence recorded in Project Control.
-10. Evidence recorded in the Master File Manifest.
+system boundary defined logical layers defined domain/capability boundaries defined authoritative ownership preserved AG-02 repository boundaries respected dependency direction validated database boundary validated external integration boundary validated authorization boundary validated lifecycle authority validated payment/cash separation validated KYC boundary validated messaging boundary validated location/tracking boundary validated notification boundary validated analytics boundary validated administrative boundary validated security cross-cutting boundary validated audit ownership validated failure/idempotency rules validated AG-01 compatibility confirmed AG-04 compatibility confirmed AG-05 compatibility confirmed AG-06 compatibility confirmed AG-07 compatibility confirmed AG-08 compatibility confirmed AG-09 compatibility confirmed AG-10 compatibility confirmed AG-11 compatibility confirmed AG-12 compatibility confirmed AG-13 compatibility confirmed no unresolved blocking contradiction exists verification evidence is recorded Project Control and Manifest are updated 30. Verification Requirement 
 
-Until verification is complete:
+AG-03 becomes:
 
-APPLICATION IMPLEMENTATION = LOCKED
+VERIFIED 
 
-PHYSICAL FILE COUNT = NOT YET CALCULATED
+only after:
 
-## 23. Verification Status
+static/document consistency review; AG-01 compatibility review; AG-02 repository-boundary review; domain ownership review; dependency-direction review; critical-flow review; security/authorization review; cross-gate compatibility review; evidence registration in the canonical control documents. 
 
-Current status:
+Until then:
 
-READY FOR FORMAL GATE REVIEW
+AG-03 = READY FOR VERIFICATION APPLICATION IMPLEMENTATION = LOCKED PHYSICAL FILE COUNT = NOT YET CALCULATED 31. Next Gate 
 
-This status does not mean VERIFIED.
+After AG-03 is formally verified:
 
-AG-03 becomes VERIFIED only after the verification requirements in Section 22 have been completed and recorded.
+NEXT = AG-04 — DATA MODEL 
 
-## 24. Next Gate
+No implementation file is authorized merely because AG-03 is uploaded.
 
-After successful AG-03 verification:
+32. Control Statement 
 
-AG-04 — DATA MODEL
+AG-03 establishes the logical system architecture and dependency boundaries for NIDDE.
 
-No implementation file is authorized merely because AG-03 is verified.
+It defines how the system is divided without creating competing ownership of business entities.
 
-## 25. Change Control
+AG-04 remains authoritative for the logical data model.
 
-Any change affecting:
+AG-05 through AG-13 remain authoritative for their respective specialized architecture boundaries.
 
-- domain ownership
-- dependency direction
-- lifecycle authority
-- financial boundaries
-- authorization boundaries
-- external integration boundaries
-- data-access boundaries
+Security and Audit / Logging are treated as cross-cutting capabilities rather than independent owners of ordinary business entities.
 
-requires impact analysis against affected architecture gates.
+The backend/domain boundary remains authoritative for protected business decisions.
 
-No silent architecture changes are permitted.
+No client, provider, analytics component, notification mechanism, or infrastructure implementation may silently redefine an approved NIDDE architecture contract.
 
-## 26. Control Statement
+AG-03 STATUS: READY FOR VERIFICATION
 
-AG-03 establishes the system and dependency architecture for NIDDE.
+IMPLEMENTATION: LOCKED
 
-It does not replace:
+PHYSICAL-FILE COUNT: NOT YET CALCULATED
 
-- AG-01 Technology Stack
-- AG-02 Repository Structure
-- AG-04 Data Model
-- AG-05 API Contract
-- AG-06 Authentication / Authorization
-- AG-07 Security Model
-- AG-08 External Integrations
 
-The architecture remains implementation-locked until the complete project control process authorizes Phase 01.
-
----
-
-End of AG-03
