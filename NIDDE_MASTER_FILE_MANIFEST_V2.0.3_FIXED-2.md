@@ -1,165 +1,68 @@
 NIDDE — MASTER FILE MANIFEST 
 
 Project: NIDDE
-Phase: 00 — ARCHITECTURE / REPOSITORY BASELINE
-Manifest Revision: V2.1.0
+Phase: 00 — ARCHITECTURE / REPOSITORY CONTROL
+Revision: V2.0.3-FIXED-3
 Status: READY FOR VERIFICATION
 Implementation: CONTROLLED
-Authority: Repository File and Boundary Control
 
 1. Purpose 
 
-This document defines the canonical repository file manifest for NIDDE.
+This manifest is the canonical control document for NIDDE repository file identity, repository structure, architecture-document uniqueness, ownership, and implementation traceability.
 
-It establishes:
+It defines how repository files are identified and controlled.
 
-approved repository boundaries canonical architecture-document locations required control files implementation directories testing boundaries infrastructure boundaries GitHub configuration boundaries file naming rules forbidden repository content physical-file inventory requirements 
+It does not replace the individual architecture gates.
 
-This manifest does not implement application behavior.
+2. Architecture Baseline 
 
-2. Manifest Authority 
-
-This manifest is the canonical reference for the planned repository structure.
-
-It must remain consistent with:
-
-NIDDE_PROJECT_CONTROL.md AG-01 through AG-13 architecture documents repository state approved implementation decisions 
-
-If an implementation file is required but is not represented by the approved repository structure, the implementation must stop until the manifest is updated or the file is explicitly classified as an allowed implementation artifact.
-
-3. Canonical Root 
-
-The repository root is:
-
-NIDDE/ 
-
-The repository must not introduce unrelated top-level directories.
-
-4. Required Root Files 
-
-The following root files are approved:
-
-README.md NIDDE_PROJECT_CONTROL.md NIDDE_MASTER_FILE_MANIFEST_V2.0.3_FIXED-2.md NIDDE_ARCHITECTURE_ALIGNMENT_CONTROL_V1.0.1.md .env.example .gitignore CONTRIBUTING.md SECURITY.md 
-
-A future canonical rename of the manifest must be performed through controlled change management rather than by silently creating competing manifest files.
-
-5. Architecture Documentation 
-
-Architecture documents belong to the repository documentation/control layer.
-
-Canonical architecture gates are:
+The canonical architecture sequence is:
 
 AG-01 — Technology Stack AG-02 — Repository / System Architecture AG-03 — System Dependency Architecture AG-04 — Data Model AG-05 — API Contract Architecture AG-06 — Authentication / Authorization Architecture AG-07 — Security Model AG-08 — External Integrations Architecture AG-09 — Android Architecture AG-10 — Testing Architecture AG-11 — CI/CD Architecture AG-12 — Production Architecture AG-13 — Release Architecture 
 
-Each gate must have one canonical active document.
+Each gate must have one active canonical architecture document.
 
-Duplicate active versions of the same gate must not coexist.
+3. Canonical Document Rule 
 
-Historical or superseded documents must be clearly identified as archived or superseded if retained.
+Only one active canonical document may represent each architecture gate.
 
-6. Repository Boundaries 
+The repository must not contain multiple active documents representing the same gate.
 
-Approved implementation boundaries:
+If an older document is retained for historical or audit purposes, it must clearly state:
 
-backend/ database/ shared/ android/ admin/ tests/ docs/ infrastructure/ 
+STATUS: SUPERSEDED 
 
-Approved GitHub configuration boundary:
+A superseded document must never be treated as an active architecture contract.
 
-.github/ 7. Backend Boundary backend/ 
+4. Architecture Naming Rule 
 
-Owns server-side implementation.
+Canonical architecture documents should follow:
 
-Expected responsibilities include:
+NIDDE_AG-XX_<DESCRIPTIVE_NAME>_V<VERSION>.md 
 
-API implementation application services domain services authorization enforcement lifecycle enforcement payment state handling KYC state handling messaging authorization notification coordination business validation integration orchestration 
+Examples:
 
-Backend implementation must follow AG-03 through AG-08.
+NIDDE_AG-04_DATA_MODEL_ARCHITECTURE_V1.0.0.md NIDDE_AG-08_EXTERNAL_INTEGRATIONS_ARCHITECTURE_V1.0.1.md NIDDE_AG-09_ANDROID_ARCHITECTURE_V1.0.1.md 
 
-8. Database Boundary database/ 
+The exact canonical filename must be recorded in the repository inventory.
 
-Owns database-specific implementation artifacts.
+Filenames must not be changed casually after implementation begins.
 
-Potential contents include:
+A filename change affecting a canonical document requires controlled change.
 
-database/ ├── migrations/ ├── seeds/ └── schema/ 
+5. Repository Control Documents 
 
-Database artifacts must remain consistent with AG-04.
+Repository control documents are separate from implementation source files.
 
-The database must not silently redefine domain ownership or API behavior.
+Known control categories include:
 
-9. Shared Boundary shared/ 
+README.md NIDDE_PROJECT_CONTROL.md NIDDE_MASTER_FILE_MANIFEST_*.md NIDDE_ARCHITECTURE_ALIGNMENT_CONTROL_*.md CONTRIBUTING.md SECURITY.md .env.example .gitignore 
 
-Contains only artifacts that are genuinely shared between approved application boundaries.
+The exact active filenames must be confirmed against the physical repository inventory.
 
-Examples may include:
+A planned filename must not be treated as an existing physical file.
 
-shared contract definitions generated API contract models where approved shared validation schemas where explicitly authorized 
-
-Provider-specific implementation and backend-private logic must not be moved into shared/ merely for convenience.
-
-10. Android Boundary android/ 
-
-Owns Android implementation.
-
-Expected responsibilities include:
-
-Android application source UI navigation state management API client local persistence secure session handling permissions location presentation notifications approved payment interaction Android-specific testing 
-
-Android remains an untrusted client.
-
-AG-09 controls the Android architecture.
-
-11. Admin Boundary admin/ 
-
-Owns approved administrative interface implementation.
-
-Administrative privileges remain backend-authorized.
-
-The presence of an admin UI must never be interpreted as proof of administrative authority.
-
-12. Testing Boundary tests/ 
-
-Owns repository-level testing assets.
-
-Testing must remain compatible with AG-10.
-
-Tests may include:
-
-unit tests integration tests contract tests security tests failure simulations end-to-end tests repository validation tests 
-
-Tests must not require production credentials during ordinary automated execution.
-
-13. Documentation Boundary docs/ 
-
-Owns:
-
-architecture evidence verification reports architecture decisions implementation notes operational documentation controlled project documentation 
-
-Documentation must not silently become a second source of architectural authority.
-
-14. Infrastructure Boundary infrastructure/ 
-
-Owns production and infrastructure implementation artifacts.
-
-Potential responsibilities include:
-
-deployment configuration infrastructure definitions environment orchestration monitoring configuration backup/recovery configuration operational tooling production validation 
-
-Infrastructure remains governed by AG-12.
-
-15. GitHub Boundary .github/ 
-
-Reserved for GitHub-native repository configuration.
-
-Approved workflow location:
-
-.github/workflows/ 
-
-CI/CD implementation must follow AG-11.
-
-Application runtime source code must not be placed inside .github/.
-
-16. Environment Configuration 
+6. Environment Configuration 
 
 The repository may contain:
 
@@ -167,131 +70,187 @@ The repository may contain:
 
 This file may contain:
 
-variable names safe placeholders documentation comments 
+variable names safe placeholders documentation comments non-sensitive development examples 
 
 It must not contain:
 
-real credentials production secrets private keys payment secrets provider secrets real database credentials 
+real credentials production secrets private keys payment secrets provider secrets real database credentials authentication secrets webhook secrets 
 
 Real environment files remain outside the repository.
 
-17. Git Ignore Requirements 
+7. Git Ignore Requirements 
 
 .gitignore must protect against accidental inclusion of:
 
-local environment files secrets build outputs IDE files generated local artifacts caches temporary files signing material 
+local environment files secrets build outputs IDE files generated local artifacts caches temporary files signing material local credentials 
 
-The exact .gitignore content must remain compatible with AG-07 and AG-11.
+The exact .gitignore implementation must remain compatible with:
 
-18. Security Restrictions 
+AG-07 AG-11 repository requirements 8. Security Restrictions 
 
 The following are forbidden in the repository:
 
-Production credentials Private keys Payment secrets Webhook secrets Provider secret keys Real authentication secrets KYC identity documents Sensitive production exports Unapproved personal data dumps Production database dumps 
+production credentials private keys payment secrets webhook secrets provider secret keys real authentication secrets KYC identity documents sensitive production exports unapproved personal-data dumps production database dumps production environment files containing secrets 
 
-Security requirements are controlled by AG-07.
+Security requirements are primarily governed by AG-07.
 
-19. Duplicate Gate Protection 
-
-Only one active canonical document may represent each architecture gate.
-
-For example, the repository must not contain two active AG-08 architecture contracts.
-
-If an older document is retained:
-
-STATUS: SUPERSEDED 
-
-must be clearly indicated.
-
-The active document must be unambiguous.
-
-20. Naming Rules 
-
-Architecture documents should follow the pattern:
-
-NIDDE_AG-XX_<DESCRIPTIVE_NAME>_V<MAJOR>.<MINOR>.<PATCH>.md 
-
-Verification reports should use an explicitly distinguishable name.
-
-Repository control documents must not be confused with implementation source files.
-
-File names must remain stable after implementation begins unless a controlled change is recorded.
-
-21. Physical File Inventory 
+9. Physical File Inventory 
 
 Before large-scale implementation begins, the repository must undergo a physical-file inventory.
 
-The inventory must record:
-
-path filename file type owner boundary architecture gate dependency role implementation status verification status whether the file is required, generated, or optional 
-
 The inventory must be generated from the actual repository state.
 
-It must not be based only on assumptions or planned filenames.
+It must record, where applicable:
 
-22. Dependency Ownership 
+path filename file type owning boundary architecture gate dependency role implementation status verification status required / generated / optional classification canonical / superseded status where applicable 
+
+The inventory must not be based solely on planned filenames or assumptions.
+
+10. Repository Boundaries 
+
+Approved implementation boundaries are controlled by AG-02 and the repository architecture.
+
+Expected boundaries may include:
+
+backend/ database/ shared/ android/ admin/ tests/ docs/ infrastructure/ .github/ 
+
+A directory listed as a planned boundary must not be considered physically present until verified in the repository.
+
+No unrelated top-level boundary may be introduced without controlled review.
+
+11. Dependency Ownership 
 
 Every implementation file must have a clear ownership boundary.
 
-Dependencies must not create unauthorized coupling between:
+Unauthorized coupling must not be introduced between:
 
-Android and database internals UI and provider SDK business logic client and administrative internals backend and Android private implementation application code and infrastructure secrets 
+Android and database internals UI and provider-specific business logic business logic and infrastructure secrets client and administrative internals backend and Android private implementation details application code and deployment credentials unrelated architecture boundaries 
 
-Cross-boundary dependencies must be explicitly justified.
+Cross-boundary dependencies must be explicitly justified and compatible with the owning architecture gates.
 
-23. Source-of-Truth Rules 
+12. Source-of-Truth Order 
 
 When documents appear to conflict, resolve them in this order:
 
-1. Canonical Master File Manifest 2. NIDDE_PROJECT_CONTROL.md 3. Verified architecture gates 4. Repository implementation state 5. Unverified drafts / historical copies 
+1. Canonical Master File Manifest 2. NIDDE_PROJECT_CONTROL.md 3. Verified architecture gates 4. Verified repository implementation state 5. Unverified drafts / historical copies 
 
 A lower-priority artifact must not silently override a higher-priority control document.
 
-24. Implementation Readiness 
+However, the manifest must never claim that a physical file exists unless the physical repository inventory confirms it.
 
-The manifest does not authorize unrestricted implementation.
+13. Architecture Authority 
+
+The Master File Manifest controls:
+
+repository file identity canonical document identity repository structure file ownership classification implementation traceability 
+
+It does not redefine:
+
+domain authority API contracts authentication rules authorization rules security requirements external provider behavior Android business authority testing architecture CI/CD behavior production architecture release requirements 
+
+Those remain owned by their respective architecture gates.
+
+14. Server Authority 
+
+Client applications must never become authoritative for:
+
+roles permissions ownership administrative authority KYC approval payment success service completion protected lifecycle state financial settlement 
+
+The backend/domain boundary remains authoritative.
+
+15. Implementation Readiness 
+
+The manifest does not independently authorize unrestricted implementation.
 
 Before implementation proceeds, the following must be confirmed:
 
-architecture gates are consistent repository structure is consistent active gate documents are unique required control files exist forbidden files are absent physical-file inventory is complete dependency ownership is understood security restrictions are enforced implementation sequence is approved 25. Change Control 
+architecture gates are consistent repository structure is consistent active gate documents are unique required control files exist forbidden files are absent physical-file inventory is complete dependency ownership is understood security restrictions are enforced implementation sequence is approved 16. Change Control 
 
-Changes to this manifest require explicit review when they affect:
+Changes to this manifest require controlled review when they affect:
 
-repository boundaries architecture-document identity canonical file names implementation ownership dependency ownership security boundaries testing boundaries CI/CD boundaries production boundaries release boundaries 
+repository boundaries architecture-document identity canonical filenames implementation ownership dependency ownership security boundaries testing boundaries CI/CD boundaries production boundaries release boundaries 
 
 Do not create a second manifest to bypass a conflict.
 
-Update the canonical manifest through controlled change.
+The canonical manifest must be updated through controlled change.
 
-26. Repository Readiness Checklist 
+17. Conflict Resolution 
+
+When a repository conflict is discovered:
+
+Stop the affected implementation. Identify the exact conflicting files or requirements. Determine the owning architecture gate. Determine whether the issue is: duplicate documentation filename drift architecture contradiction repository-state drift dependency ownership conflict Correct the owning artifact. Update the canonical manifest if required. Re-run cross-gate consistency checks. Resume implementation only after the blocking conflict is resolved. 
+
+No silent workaround is permitted.
+
+18. Duplicate File Protection 
+
+Before creating a new file:
+
+Search the repository for an equivalent filename. Search for documents representing the same responsibility. Determine whether an existing document is canonical. If an older document is retained, mark it SUPERSEDED. Do not create a second active contract. 
+
+This applies particularly to AG architecture documents.
+
+19. Verification Reports 
+
+Verification reports must use clearly distinguishable filenames.
+
+A verification report must not be mistaken for the canonical architecture contract.
+
+Reports may document:
+
+verification evidence compatibility findings resolved conflicts readiness status 
+
+They do not automatically change the architecture contract.
+
+20. Repository Readiness Checklist 
 
 Before implementation:
 
-[ ] Root control files verified [ ] Active architecture documents identified [ ] Duplicate active gates removed or marked superseded [ ] .env.example contains no real secrets [ ] .gitignore is present [ ] No production credentials are committed [ ] Repository boundaries match this manifest [ ] Physical-file inventory completed [ ] Dependency ownership reviewed [ ] Cross-gate consistency reviewed [ ] Implementation authorization confirmed 27. Implementation Sequence 
+[ ] Root control files verified [ ] Active architecture documents identified [ ] Duplicate active gates removed or marked SUPERSEDED [ ] .env.example contains no real secrets [ ] .gitignore is present [ ] No production credentials are committed [ ] Repository boundaries match the approved architecture [ ] Physical-file inventory completed [ ] Dependency ownership reviewed [ ] Cross-gate consistency reviewed [ ] Implementation authorization confirmed 21. Implementation Sequence 
 
-The repository implementation should proceed in controlled stages:
+Repository implementation should proceed in controlled stages:
 
 Architecture Baseline ↓ Physical File Inventory ↓ Dependency Graph ↓ Backend Foundation ↓ Database Foundation ↓ Authentication / Authorization ↓ Marketplace Foundation ↓ Requests / Offers ↓ Service Lifecycle ↓ Messaging ↓ Location / Tracking ↓ Payments / Cash ↓ KYC ↓ Notifications ↓ Reviews ↓ Administration ↓ Android Integration ↓ Testing ↓ CI/CD ↓ Production ↓ Release 
 
-Each stage must satisfy its relevant architecture gate.
+Each stage must satisfy its relevant architecture requirements.
 
-28. Final Manifest Rule 
+22. Implementation File Traceability 
+
+Every implementation file must be traceable to:
+
+a repository boundary an owning component an architecture responsibility known dependencies an implementation purpose applicable tests an implementation status 
+
+Files without an identifiable purpose or ownership must not be introduced.
+
+23. Generated Files 
+
+Generated artifacts must be clearly distinguishable from source-controlled canonical files.
+
+Generated files should not replace their source definitions.
+
+Generated artifacts must not contain secrets.
+
+Build outputs, caches, temporary files, and local artifacts must remain excluded where appropriate through .gitignore.
+
+24. Final Manifest Rule 
 
 This manifest controls repository structure and file identity.
 
 It does not override:
 
-domain authority API contracts security requirements authentication rules external integration requirements Android architecture testing requirements CI/CD requirements production requirements release requirements 
+domain authority API contracts security requirements authentication rules authorization requirements external integration requirements Android architecture testing architecture CI/CD architecture production architecture release architecture 
 
 Those responsibilities remain owned by their respective architecture gates.
 
-29. Control Statement 
+25. Final Control Statement 
 
 NIDDE must maintain one coherent repository structure with one active canonical document per architecture gate.
 
 Implementation files must be physically present, correctly owned, and traceable to the approved architecture.
 
 No duplicate active architecture contract, undocumented repository boundary, secret-bearing file, or silent architecture workaround is permitted.
+
+The physical repository state remains the final evidence for whether a planned file actually exists.
 
 NIDDE MASTER FILE MANIFEST — ACTIVE
 
@@ -300,5 +259,4 @@ MANIFEST STATUS: READY FOR VERIFICATION
 IMPLEMENTATION: CONTROLLED
 
 ARCHITECTURE BASELINE: AG-01 → AG-13
-
 
