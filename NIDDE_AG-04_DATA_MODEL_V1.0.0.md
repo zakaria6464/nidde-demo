@@ -1,494 +1,940 @@
 # NIDDE — AG-04 DATA MODEL
 
-**Project:** NIDDE  
-**Phase:** 00 — ARCHITECTURE  
-**Gate:** AG-04 — Data Model  
-**Revision:** V1.0.0  
-**Status:** READY FOR VERIFICATION  
-**Implementation:** LOCKED  
-**Physical-file count:** NOT YET CALCULATED
+Project: NIDDE
+Phase: 00 — ARCHITECTURE
+Gate: AG-04 — Data Model
+Revision: V1.0.0
+Status: READY FOR FORMAL GATE REVIEW
+Implementation: LOCKED
+Physical-file count: NOT YET CALCULATED
 
 ## 1. Purpose
 
-AG-04 defines the logical data model required by NIDDE before implementation: entities, ownership, relationships, lifecycle state, constraints, indexes, audit fields, migration rules, and seed rules.
+AG-04 defines the logical data model required by NIDDE before implementation.
 
-It is a design contract, not an implementation migration or application source file.
+It defines:
+
+- entities
+- authoritative ownership
+- relationships
+- cardinality
+- lifecycle state
+- primary and foreign-key requirements
+- uniqueness and integrity constraints
+- indexes
+- audit fields
+- sensitive-data boundaries
+- migration rules
+- seed rules
+- retention considerations
+
+This document is a design contract.
+
+It is not an implementation migration and is not application source code.
 
 ## 2. Data Ownership Principles
 
 1. Every entity has one authoritative domain owner.
-2. Foreign-key relationships must reflect approved domain ownership.
-3. Business rules are enforced by the backend/domain layer, not only by clients.
-4. Sensitive information is minimized and access-controlled.
-5. Financial and audit records are append-oriented and traceable.
-6. Lifecycle state changes are explicit and auditable.
-7. Soft deletion is used only where required by business, legal, or audit needs; it must not replace proper lifecycle state.
-8. No cross-domain direct database writes outside approved repository/data-access boundaries.
+2. Foreign-key relationships must respect approved domain ownership.
+3. Business rules are enforced by backend/domain logic and must not depend solely on client validation.
+4. Sensitive information must be minimized and access-controlled.
+5. Financial and audit records must be attributable and traceable.
+6. Financial records must support append-oriented auditability where required.
+7. Lifecycle state changes must be explicit and auditable.
+8. Soft deletion must only be used where required by business, legal, or audit requirements.
+9. Soft deletion must never replace an authoritative lifecycle state.
+10. Cross-domain direct database writes are prohibited.
+11. Persistence access must occur through approved data-access boundaries.
+12. Referential integrity must not be bypassed by application shortcuts.
 
-## 3. Identity and Account Model
+## 3. Common Data Conventions
 
-### User
+Unless a specific entity requires another representation:
 
-Represents the common identity record.
+### 3.1 Primary Keys
 
-Core fields:
-- id
-- role/profile references
-- email or phone identity
-- credential/authentication references
-- status
-- created_at
-- updated_at
+Every persistent entity must have:
 
-Rules:
-- identity is unique;
-- role claims are never trusted from the client;
-- sensitive authentication material is not stored in plaintext.
+- `id`
+- globally unique identifier semantics
+- immutable identity after creation
 
-### Client Profile
+### 3.2 Timestamps
 
-Owns client-specific marketplace information and preferences.
+Entities that change over time should contain:
 
-### Artisan Profile
+- `created_at`
+- `updated_at`
 
-Owns artisan-specific professional information, availability, service area, and verification status.
+Immutable event/history records should contain:
 
-### Company Profile
+- `created_at` or equivalent event timestamp
 
-Owns company-specific business information, verification status, and service capabilities.
+### 3.3 Audit Identity
 
-## 4. Marketplace Model
+Security-sensitive and administrative records should retain:
 
-### Service Category
-
-Defines marketplace classification.
-
-Fields include:
-- id
-- parent_id where hierarchy is required
-- name
-- description
-- status
-- created_at
-- updated_at
-
-### Service Offering
-
-Represents a service available in the marketplace.
-
-Fields include:
-- id
-- category_id
-- owner/profile reference
-- title
-- description
-- pricing metadata
-- availability metadata
-- status
-- created_at
-- updated_at
-
-## 5. Request and Offer Model
-
-### Service Request
-
-Authoritative record for a client's request.
-
-Core fields:
-- id
-- client_id
-- service/category reference
-- location reference
-- description
-- requested schedule
-- lifecycle_status
-- created_at
-- updated_at
-- completed_at / cancelled_at where applicable
-
-### Offer
-
-Represents an artisan/company proposal against a request.
-
-Core fields:
-- id
-- request_id
-- provider/profile_id
-- amount
-- currency
-- message/terms
-- status
-- expires_at where applicable
-- created_at
-- updated_at
-
-Constraints:
-- request must exist;
-- provider must be eligible and authorized;
-- duplicate active offers must be prevented according to the business rule;
-- accepted offer must be uniquely identifiable for a request.
-
-## 6. Service Lifecycle Model
-
-The authoritative lifecycle is:
-
-`REQUESTED → ACCEPTED → EN_ROUTE → ARRIVED → IN_PROGRESS → COMPLETED`
-
-Cancellation and error states are modeled explicitly.
-
-Every transition records:
-- previous_state
-- new_state
-- actor_id
+- `actor_id`
+- operation/action
 - timestamp
 - reason where required
-- correlation/reference id
+- correlation/reference identifier where applicable
 
-A lifecycle history must be immutable after recording except through an approved correction/audit mechanism.
+### 3.4 Status
 
-## 7. Location Model
+Status values must be explicit enumerations or controlled values.
 
-### Location
+Free-form status strings are prohibited for authoritative lifecycle states.
 
-Represents a reusable geographic address/location reference where appropriate.
+### 3.5 Money
 
-Potential fields:
-- id
+Monetary records must define:
+
+- integer/minor-unit or equivalent exact monetary representation
+- currency code
+- transaction status
+
+Floating-point values must not be used as the authoritative representation of financial amounts.
+
+### 3.6 Sensitive Data
+
+Credentials, authentication secrets, KYC document contents, payment secrets, provider secrets, and similar sensitive material must not be stored casually in ordinary application tables or Git.
+
+## 4. Identity and Account Model
+
+### 4.1 User
+
+Owner:
+Identity / Accounts
+
+Purpose:
+Common identity record for all platform users.
+
+Fields:
+
+- `id`
+- `status`
+- `created_at`
+- `updated_at`
+
+Identity/contact references must be represented through approved identity/authentication boundaries.
+
+Authentication credentials and secrets are not stored as plaintext in the User entity.
+
+Rules:
+
+- identity must be unique according to the approved authentication identity mechanism
+- user identity is immutable
+- client-supplied role claims are never authoritative
+
+### 4.2 Client Profile
+
+Owner:
+Client
+
+Fields:
+
+- `id`
+- `user_id`
+- client-specific profile data
+- preferences metadata
+- `status`
+- `created_at`
+- `updated_at`
+
+Relationship:
+
+`Client Profile.user_id -> User.id`
+
+Constraint:
+
+One User may have at most one active Client Profile where the business model requires a single profile.
+
+### 4.3 Artisan Profile
+
+Owner:
+Artisan
+
+Fields:
+
+- `id`
+- `user_id`
+- professional profile data
+- availability metadata
+- service-area metadata
+- verification reference
+- `status`
+- `created_at`
+- `updated_at`
+
+Relationship:
+
+`Artisan Profile.user_id -> User.id`
+
+### 4.4 Company Profile
+
+Owner:
+Company
+
+Fields:
+
+- `id`
+- company/account reference
+- business information
+- verification reference
+- service capabilities
+- `status`
+- `created_at`
+- `updated_at`
+
+Relationships must reference the authoritative identity/account records.
+
+## 5. Marketplace Model
+
+### 5.1 Service Category
+
+Owner:
+Services / Marketplace
+
+Fields:
+
+- `id`
+- `parent_id` nullable
+- `name`
+- `description` nullable
+- `status`
+- `created_at`
+- `updated_at`
+
+Relationship:
+
+`Service Category.parent_id -> Service Category.id`
+
+Rules:
+
+- category hierarchy must not create cycles
+- active categories must have valid ownership
+- category names must satisfy the approved uniqueness scope
+
+### 5.2 Service Offering
+
+Owner:
+Services / Marketplace
+
+Fields:
+
+- `id`
+- `category_id`
+- `owner_profile_id`
+- `title`
+- `description`
+- pricing metadata
+- availability metadata
+- `status`
+- `created_at`
+- `updated_at`
+
+Relationships:
+
+`Service Offering.category_id -> Service Category.id`
+
+`Service Offering.owner_profile_id -> approved provider profile`
+
+Rules:
+
+- owner must be an authorized provider
+- category must exist
+- inactive offerings must not be treated as active marketplace inventory
+
+## 6. Service Request
+
+Owner:
+Requests
+
+Fields:
+
+- `id`
+- `client_id`
+- `service_category_id` or approved service reference
+- `location_id`
+- `description`
+- requested schedule
+- `lifecycle_status`
+- `created_at`
+- `updated_at`
+- `completed_at` nullable
+- `cancelled_at` nullable
+
+Relationships:
+
+`Service Request.client_id -> Client Profile.id`
+
+`Service Request.location_id -> Location.id`
+
+Category/service references must resolve to an approved marketplace entity.
+
+Rules:
+
+- request must have an authorized client owner
+- lifecycle status must use controlled values
+- completion timestamps are only valid for completed requests
+- cancellation timestamps are only valid for cancelled requests
+
+## 7. Offer
+
+Owner:
+Offers
+
+Fields:
+
+- `id`
+- `request_id`
+- `provider_profile_id`
+- `amount`
+- `currency`
+- message/terms
+- `status`
+- `expires_at` nullable
+- `created_at`
+- `updated_at`
+
+Relationships:
+
+`Offer.request_id -> Service Request.id`
+
+`Offer.provider_profile_id -> approved provider profile`
+
+Constraints:
+
+- request must exist
+- provider must be eligible and authorized
+- amount must be valid
+- currency must be explicitly defined
+- duplicate active offers must be prevented according to the approved business rule
+- an accepted request must have at most one authoritative accepted offer
+
+## 8. Service Lifecycle
+
+Owner:
+Service Lifecycle
+
+### 8.1 Authoritative States
+
+The primary lifecycle is:
+
+`REQUESTED`
+→ `ACCEPTED`
+→ `EN_ROUTE`
+→ `ARRIVED`
+→ `IN_PROGRESS`
+→ `COMPLETED`
+
+Cancellation and error states must be explicit.
+
+### 8.2 Lifecycle History
+
+Fields:
+
+- `id`
+- service/request reference
+- `previous_state`
+- `new_state`
+- `actor_id`
+- `timestamp`
+- `reason` nullable
+- `correlation_id` or reference identifier
+
+Rules:
+
+- history is append-oriented
+- recorded history must be immutable except through approved correction/audit mechanisms
+- invalid state transitions must be rejected
+- actor must be authorized for the transition
+
+## 9. Location Model
+
+### 9.1 Location
+
+Owner:
+Location / Tracking
+
+Fields:
+
+- `id`
 - latitude
 - longitude
-- address components
-- geocoding metadata
-- created_at
-- updated_at
+- address components where required
+- geocoding metadata where required
+- `created_at`
+- `updated_at`
 
-Location precision and retention must follow the security/privacy model.
+Rules:
 
-### Tracking Event
+- coordinate precision must follow privacy requirements
+- unnecessary location precision must not be retained
+- retention must follow approved security/privacy policy
 
-Represents time-stamped movement/status data when tracking is active.
+### 9.2 Tracking Event
 
-Core fields:
-- id
+Owner:
+Location / Tracking
+
+Fields:
+
+- `id`
 - service/order reference
 - actor/device reference where required
 - latitude
 - longitude
 - timestamp
-- event_type
+- `event_type`
 
-Tracking data must not be treated as authoritative proof of payment or service completion by itself.
+Rules:
 
-## 8. Messaging Model
+Tracking events are operational evidence only.
 
-### Conversation
+Tracking data must not independently prove:
 
-Defines a communication boundary between permitted participants.
+- payment success
+- service completion
+- financial settlement
 
-### Message
+## 10. Messaging Model
 
-Fields include:
-- id
-- conversation_id
-- sender_id
-- message_type
-- content/reference
+### 10.1 Conversation
+
+Owner:
+Messaging
+
+Fields:
+
+- `id`
+- conversation type
 - created_at
-- read_at where applicable
+- updated_at
 - status
 
-Authorization must ensure participants can access only conversations they are permitted to access.
+Participants must be represented through an approved participant relationship.
 
-## 9. Payment and Cash Model
+### 10.2 Message
 
-### Payment
+Fields:
 
-Represents an attempted or completed financial transaction.
+- `id`
+- `conversation_id`
+- `sender_id`
+- `message_type`
+- content/reference
+- `created_at`
+- `read_at` nullable
+- `status`
 
-Core fields:
-- id
+Relationships:
+
+`Message.conversation_id -> Conversation.id`
+
+`Message.sender_id -> User.id`
+
+Rules:
+
+- sender must be a permitted participant
+- participants may access only authorized conversations
+- message records must preserve auditability
+
+## 11. Payment and Cash Model
+
+### 11.1 Payment
+
+Owner:
+Payments
+
+Fields:
+
+- `id`
 - request/service reference
 - payer reference
-- payee/reference where applicable
+- payee reference where applicable
 - method
 - provider/reference
 - amount
 - currency
 - status
 - idempotency/reference key
-- created_at
-- updated_at
-- completed_at
+- `created_at`
+- `updated_at`
+- `completed_at` nullable
 
-Payment status must distinguish at least pending, successful, failed, cancelled, and rejected where applicable.
+Minimum statuses:
 
-### Cash Transaction
+- `PENDING`
+- `SUCCESSFUL`
+- `FAILED`
+- `CANCELLED`
+- `REJECTED`
 
-Represents a cash settlement/record separate from electronic-provider state.
+Rules:
+
+- payment success must never originate solely from client state
+- provider callbacks/webhooks must be validated
+- duplicate processing must be prevented through idempotency controls
+- provider references must be traceable
+
+### 11.2 Cash Transaction
+
+Owner:
+Cash
+
+Fields:
+
+- `id`
+- service/request reference
+- payer reference
+- payee reference
+- amount
+- currency
+- status
+- recorded_by
+- recorded_at
+- reference/correlation identifier
 
 Cash records must be attributable, auditable, and reconcilable.
 
-Rules:
-- never mark electronic payment successful from client-side state;
-- provider callbacks/webhooks must be validated by the integration boundary;
-- duplicate transaction processing must be prevented through idempotency controls.
+Cash must remain distinct from electronic-provider transaction state.
 
-## 10. Review Model
+## 12. Review Model
+
+Owner:
+Reviews / Ratings
 
 ### Review
 
-Represents a completed-service review.
+Fields:
 
-Fields include:
-- id
+- `id`
 - service/request reference
-- author_id
-- subject_id
-- rating
-- comment
-- moderation_status
+- `author_id`
+- `subject_id`
+- `rating`
+- `comment`
+- `moderation_status`
+- `created_at`
+- `updated_at`
+
+Constraints:
+
+- service completion must be verified server-side
+- author must be eligible
+- subject must be valid
+- rating must be within the approved range
+- duplicate reviews must be prevented according to business rules
+- moderation actions must be auditable
+
+## 13. KYC Model
+
+Owner:
+KYC / Verification
+
+### 13.1 KYC Case
+
+Fields:
+
+- `id`
+- `subject_id`
+- `status`
+- `verification_type`
+- reviewer reference where applicable
+- `submitted_at`
+- `reviewed_at` nullable
+- decision reason/reference where applicable
+
+Rules:
+
+- status transitions must be authorized
+- approval must not originate from client state
+- decisions must be auditable
+
+### 13.2 KYC Document
+
+Fields:
+
+- `id`
+- `kyc_case_id`
+- document type
+- secure-storage reference
+- status
 - created_at
 - updated_at
 
-Constraints:
-- review eligibility must be validated server-side;
-- rating range is constrained;
-- duplicate reviews are prevented according to the business rule;
-- moderation actions are auditable.
+Sensitive document contents must remain in the approved secure storage/integration boundary.
 
-## 11. KYC Model
+Git must never contain KYC document contents.
 
-### KYC Case
+## 14. Notification Model
 
-Represents verification state for a person/company.
-
-Fields include:
-- id
-- subject_id
-- status
-- verification_type
-- reviewer reference where applicable
-- submitted_at
-- reviewed_at
-- decision_reason/reference
-
-### KYC Document
-
-Represents a document metadata record.
-
-Sensitive document contents are stored through the approved secure storage/integration boundary, not casually in ordinary tables or Git.
-
-## 12. Notification Model
+Owner:
+Notifications
 
 ### Notification
 
-Fields include:
-- id
-- recipient_id
-- type
+Fields:
+
+- `id`
+- `recipient_id`
+- `type`
 - payload/reference
-- channel
-- status
-- created_at
-- delivered_at / read_at where applicable
+- `channel`
+- `status`
+- `created_at`
+- `delivered_at` nullable
+- `read_at` nullable
+
+Rules:
 
 Notification delivery is not authoritative for the underlying business transaction.
 
-## 13. Admin and Moderation Model
+A failed notification must not automatically roll back the business transaction unless an explicitly approved workflow requires it.
 
-Administrative actions must be attributable to an admin identity.
+## 15. Admin and Moderation Model
 
-Moderation records should capture:
-- target entity
+Owner:
+Admin / Moderation
+
+Administrative and moderation records must be attributable.
+
+Fields:
+
+- `id`
+- target entity/reference
 - action
-- actor
+- actor_id
 - reason
 - previous status where relevant
-- resulting status
+- resulting status where relevant
 - timestamp
-
-Admin authority is enforced by backend authorization.
-
-## 14. Analytics Model
-
-Operational analytics should use event records or controlled projections rather than allowing analytics logic to mutate transactional source-of-truth records.
-
-Analytics records must identify:
-- event type
-- actor/entity reference where appropriate
-- timestamp
-- source/correlation reference
-- non-sensitive event metadata
-
-## 15. Audit Model
-
-### Audit Event
-
-Critical operations must generate auditable events.
-
-Core fields:
-- id
-- actor_id where applicable
-- action
-- entity_type
-- entity_id
-- timestamp
-- result
-- correlation_id
-- metadata appropriate to the security policy
-
-Secrets, credentials, and unnecessary sensitive values must never be written to audit logs.
-
-## 16. Common Data Constraints
-
-The model must enforce, where applicable:
-
-- primary keys;
-- foreign keys;
-- unique constraints;
-- not-null constraints;
-- valid enum/state values;
-- non-negative monetary amounts;
-- valid currency identifiers;
-- valid timestamps;
-- ownership constraints;
-- lifecycle transition rules;
-- idempotency uniqueness;
-- referential integrity.
-
-Database constraints complement, but do not replace, domain validation.
-
-## 17. Indexing Strategy
-
-Indexes must be created from verified access patterns rather than added blindly.
-
-Expected index classes include:
-
-- unique identity fields;
-- foreign keys used for joins;
-- request lifecycle/status queries;
-- provider availability queries;
-- offer lookup by request;
-- payment/provider reference lookup;
-- notification recipient/status lookup;
-- message conversation/time lookup;
-- audit entity/time lookup;
-- location queries where supported and required.
-
-Composite indexes must match actual query predicates and ordering.
-
-## 18. Lifecycle and Retention
-
-Every major transactional entity must define:
-
-- creation timestamp;
-- update timestamp;
-- lifecycle status;
-- completion/cancellation timestamp where applicable;
-- actor/reason for sensitive transitions where required.
-
-Retention and deletion rules must respect audit, financial, legal, privacy, and security requirements.
-
-## 19. Migration Strategy
-
-Schema changes follow:
-
-`PLAN → MIGRATION → STATIC CHECK → APPLY IN TEST → INTEGRATION CHECK → VERIFY → REGISTER`
+- correlation/reference identifier
 
 Rules:
 
-1. Migrations are versioned and ordered.
-2. Applied migrations are immutable.
-3. Destructive changes require explicit impact analysis.
-4. Production migrations require backup/recovery consideration.
-5. Rollback strategy must be defined for risky changes.
-6. Data transformations must be deterministic and tested.
-7. No manual production schema changes outside the approved migration process.
+- only authorized admins may perform privileged actions
+- administrative actions are auditable
+- client-supplied admin authority is never trusted
 
-## 20. Seed Strategy
+## 16. Analytics Model
 
-Seeds are divided into:
+Owner:
+Analytics / Reporting
 
-- required system/reference data;
-- development/test data;
-- controlled demonstration data.
+Analytics must consume approved events, records, or controlled projections.
+
+Analytics logic must not mutate transactional source-of-truth records.
+
+Analytics projections may be rebuilt from authoritative source records where architecture permits.
+
+Analytics data must respect privacy, retention, and access-control requirements.
+
+## 17. Relationships and Referential Integrity
+
+The following relationships are authoritative at the logical-model level:
+
+- Client Profile -> User
+- Artisan Profile -> User
+- Company Profile -> approved identity/account owner
+- Service Category -> parent Service Category
+- Service Offering -> Service Category
+- Service Offering -> Provider Profile
+- Service Request -> Client Profile
+- Service Request -> Service Category / Service Offering as approved
+- Service Request -> Location
+- Offer -> Service Request
+- Offer -> Provider Profile
+- Lifecycle History -> Service Request / Service reference
+- Tracking Event -> Service reference
+- Message -> Conversation
+- Message -> User
+- Payment -> Request/Service
+- Cash Transaction -> Request/Service
+- Review -> Request/Service
+- Review -> Author User/Profile
+- Review -> Subject User/Profile
+- KYC Case -> Subject
+- KYC Document -> KYC Case
+- Notification -> Recipient User
+- Moderation Record -> Target entity
+- Moderation Record -> Admin actor
+
+Foreign keys must point only to authoritative entities.
+
+## 18. Constraints
+
+The implementation data layer must enforce, where applicable:
+
+- primary-key uniqueness
+- foreign-key integrity
+- required-field constraints
+- controlled status values
+- valid monetary amounts
+- valid currency codes
+- lifecycle transition integrity
+- uniqueness rules
+- idempotency-key uniqueness within the approved scope
+- prevention of duplicate active offers where required
+- prevention of duplicate reviews where required
+- valid timestamps
+- valid ownership references
+
+Business authorization rules remain backend/domain responsibilities and must not be delegated exclusively to database constraints.
+
+## 19. Indexing Principles
+
+Indexes must be created based on approved access patterns.
+
+Expected indexing areas include:
+
+- user identity lookup
+- profile ownership
+- service category hierarchy
+- active service offerings
+- request status
+- request client ownership
+- request location/search references where applicable
+- offer request lookup
+- offer provider lookup
+- lifecycle history service lookup
+- tracking event service/time lookup
+- conversation participants
+- message conversation/time lookup
+- payment reference/idempotency lookup
+- cash transaction references
+- review subject/service lookup
+- KYC subject/status lookup
+- notification recipient/status lookup
+- audit actor/time lookup
+
+Indexes must not be added blindly.
+
+Final physical indexes require implementation-level review against actual database technology and measured access patterns.
+
+## 20. Audit Fields and Immutability
+
+The following records require strong auditability:
+
+- lifecycle transitions
+- payments
+- cash transactions
+- KYC decisions
+- moderation actions
+- security-sensitive operations
+
+Where a record represents historical evidence, it should be append-oriented.
+
+Corrections must create an auditable correction trail rather than silently rewriting historical truth.
+
+Secrets must never be included in audit records.
+
+## 21. Soft Deletion
+
+Soft deletion is not a substitute for lifecycle state.
+
+It may be used only where:
+
+- business requirements require recoverability
+- legal requirements require retention
+- audit requirements require historical visibility
+
+Entities subject to mandatory historical retention must not be physically deleted without an approved retention/deletion policy.
+
+## 22. Migration Rules
+
+Database migrations must:
+
+1. be versioned
+2. be deterministic
+3. be reviewable
+4. preserve existing data unless an approved destructive change exists
+5. include rollback or recovery strategy where technically possible
+6. respect foreign-key ordering
+7. preserve domain ownership
+8. avoid undocumented schema changes
+9. be tested before production execution
+10. be traceable to an approved change
+
+Destructive migrations require explicit approval.
+
+No manual production schema modification outside the migration/change-control process is authorized.
+
+## 23. Seed Rules
+
+Seed data must be classified as:
+
+- required baseline data
+- development/test data
+- optional demonstration data
 
 Rules:
 
-- production seeds must never contain real personal secrets;
-- passwords/credentials must not be hard-coded in repository seeds;
-- deterministic reference data should use stable identifiers where appropriate;
-- test data must be clearly separated from production data.
+1. Production seed data must be explicitly approved.
+2. Secrets must never be seeded.
+3. Real personal information must not be used as test seed data.
+4. Seed operations must be deterministic or idempotent.
+5. Seed data must not bypass domain constraints.
+6. Reference data must have stable identifiers where required.
+7. Demo/test records must remain distinguishable from real production records.
 
-## 21. Relationship Summary
+## 24. Retention and Privacy
 
-```text
-User
-├── Client Profile
-├── Artisan Profile
-├── Company Profile
-└── Admin authority
+Data retention must follow the approved security/privacy policy.
 
-Client
-└── Service Request
-    ├── Offers ← Artisan/Company
-    ├── Service Lifecycle
-    ├── Location
-    ├── Payment / Cash
-    ├── Conversation / Messages
-    └── Review
+Sensitive data must have:
 
-Artisan/Company
-└── Service Offering
+- purpose limitation
+- access control
+- minimum necessary retention
+- deletion/anonymization rules where legally and technically applicable
 
-KYC Subject
-└── KYC Case
-    └── KYC Documents
+Location, KYC, payment, messaging, and audit records require particular care.
 
-Any critical operation
-└── Audit Event
-```
+## 25. Cross-Domain Data Access
 
-## 22. Data Integrity Rules
+Domains may read or modify data only through approved contracts and data-access boundaries.
 
-1. No orphan transactional records.
-2. No cross-user access through predictable identifiers alone.
-3. Ownership must be checked in the application authorization layer.
-4. Financial totals must not be derived from untrusted client values.
-5. Lifecycle transitions must be atomic where required.
-6. Audit events must identify the operation and actor where applicable.
-7. Sensitive fields must have explicit protection and retention rules.
-8. Referential integrity must survive retries and partial external failures.
+Forbidden:
 
-## 23. Verification Checklist
+- direct cross-domain table mutation
+- bypassing domain invariants
+- undocumented database coupling
+- client-driven authoritative database changes
 
-| Check | Status |
-|---|---|
-| Core entities identified | PASS — PENDING FORMAL VERIFICATION |
-| Domain ownership mapped | PASS — PENDING FORMAL VERIFICATION |
-| Relationships mapped | PASS — PENDING FORMAL VERIFICATION |
-| Lifecycle fields defined | PASS — PENDING FORMAL VERIFICATION |
-| Constraints defined | PASS — PENDING FORMAL VERIFICATION |
-| Index strategy defined | PASS — PENDING FORMAL VERIFICATION |
-| Audit fields defined | PASS — PENDING FORMAL VERIFICATION |
-| Migration strategy defined | PASS — PENDING FORMAL VERIFICATION |
-| Seed strategy defined | PASS — PENDING FORMAL VERIFICATION |
-| Security/privacy boundary considered | PASS — PENDING FORMAL VERIFICATION |
-| Physical-file count | NOT YET CALCULATED |
+Cross-domain operations must preserve ownership defined in AG-03.
 
-## 24. Verification Requirement
+## 26. Data Security
 
-AG-04 becomes `VERIFIED` only after compatibility with the verified technology/repository/system architecture gates, database design review, integrity review, security review, migration/seed review, and evidence registration in the canonical control documents.
+The data model must support:
+
+- least-privilege access
+- sensitive-data minimization
+- encrypted transport
+- protected secret storage
+- controlled KYC storage
+- financial auditability
+- secure audit logging
+- protection against unauthorized modification
+
+Actual security mechanisms are governed jointly with AG-06 and AG-07.
+
+## 27. Compatibility With AG-03
+
+AG-04 must remain compatible with AG-03.
+
+The following AG-03 ownership rules are authoritative:
+
+- Identity owns identity
+- Authentication / Authorization owns authentication and permissions
+- Services owns marketplace services
+- Requests owns requests
+- Offers owns offers
+- Service Lifecycle owns lifecycle transitions
+- Messaging owns messaging
+- Location / Tracking owns location and tracking
+- Payments owns electronic financial transactions
+- Cash owns cash settlement records
+- Reviews owns reviews
+- KYC owns verification
+- Notifications owns notification delivery
+- Admin / Moderation owns privileged administrative actions
+- Analytics owns projections/reporting
+- Security owns security controls
+- Audit / Logging owns audit evidence
+
+AG-04 must not introduce ownership that contradicts AG-03.
+
+## 28. Compatibility With AG-05 Through AG-08
+
+The logical data model must provide stable references for:
+
+- API resources and contracts
+- authentication and authorization subjects
+- security controls
+- external provider references
+
+AG-05 owns API contract details.
+
+AG-06 owns authentication/authorization details.
+
+AG-07 owns security model details.
+
+AG-08 owns external integration details.
+
+AG-04 does not replace those gates.
+
+## 29. Verification Requirements
+
+AG-04 may become VERIFIED only after:
+
+1. Static/document consistency check.
+2. Compatibility with AG-01.
+3. Compatibility with AG-02 repository boundaries.
+4. Compatibility with AG-03 ownership and dependency architecture.
+5. Entity completeness review.
+6. Relationship and cardinality review.
+7. Constraint review.
+8. Indexing review.
+9. Audit and immutability review.
+10. Migration review.
+11. Seed review.
+12. Security/privacy review.
+13. Cross-domain access review.
+14. Evidence recorded in Project Control.
+15. Evidence recorded in the Master File Manifest.
 
 Until then:
 
-`APPLICATION IMPLEMENTATION = LOCKED`
+APPLICATION IMPLEMENTATION = LOCKED
 
-`PHYSICAL FILE COUNT = NOT YET CALCULATED`
+PHYSICAL FILE COUNT = NOT YET CALCULATED
 
-## 25. Next Gate
+## 30. Verification Status
 
-After AG-04 is verified:
+Current status:
 
-`AG-05 — API CONTRACT`
+READY FOR FORMAL GATE REVIEW
 
-No implementation file is authorized merely because this architecture document is uploaded.
+This document is not VERIFIED merely because it is present in the repository.
+
+Formal verification requires the checks defined in Section 29.
+
+## 31. Next Gate
+
+After successful AG-04 verification:
+
+AG-05 — API CONTRACT ARCHITECTURE
+
+No application implementation is authorized merely because AG-04 is verified.
+
+## 32. Change Control
+
+Changes affecting:
+
+- entity ownership
+- relationships
+- lifecycle state
+- financial records
+- security-sensitive data
+- cross-domain references
+- migration rules
+- retention rules
+
+require impact analysis against affected architecture gates.
+
+No silent data-model changes are permitted.
+
+## 33. Control Statement
+
+AG-04 establishes the logical data model contract for NIDDE.
+
+It does not authorize implementation.
+
+The physical schema, migrations, repositories, indexes, and application models must be implemented only after the architecture/file-count lock and Phase 01 authorization requirements are satisfied.
+
+---
+
+END OF AG-04
